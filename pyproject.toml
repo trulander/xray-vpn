@@ -1,0 +1,13 @@
+[project]
+name = "xray-vpn"
+version = "1.0.0"
+description = "Xray VPN server deployment with automatic SSL certificates"
+dependencies = [
+    "docker>=7.0.0",
+    "pyyaml>=6.0.1",
+    "jinja2>=3.1.2",
+    "cryptography>=41.0.0",
+    "click>=8.1.0",
+    "python-dotenv>=1.0.0"
+]
+requires-python = ">=3.12" 

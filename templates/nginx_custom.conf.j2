@@ -1,0 +1,77 @@
+# VPN маршруты - VMess WebSocket
+location {{ vmess_ws_path }} {
+    if ($http_upgrade != "websocket") {
+        return 404;
+    }
+    proxy_redirect off;
+    proxy_pass http://xray-server:10001;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 52w;
+}
+
+# VPN маршруты - VLESS WebSocket
+location {{ vless_ws_path }} {
+    if ($http_upgrade != "websocket") {
+        return 404;
+    }
+    proxy_redirect off;
+    proxy_pass http://xray-server:10002;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 52w;
+}
+
+# VPN маршруты - Trojan WebSocket
+location {{ trojan_ws_path }} {
+    if ($http_upgrade != "websocket") {
+        return 404;
+    }
+    proxy_redirect off;
+    proxy_pass http://xray-server:10003;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 52w;
+}
+
+# VPN маршруты - VMess gRPC
+location {{ vmess_grpc_path }} {
+    grpc_pass grpc://xray-server:10011;
+    grpc_set_header Host $host;
+    grpc_set_header X-Real-IP $remote_addr;
+    grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    grpc_set_header X-Forwarded-Proto $scheme;
+}
+
+# VPN маршруты - VLESS gRPC
+location {{ vless_grpc_path }} {
+    grpc_pass grpc://xray-server:10012;
+    grpc_set_header Host $host;
+    grpc_set_header X-Real-IP $remote_addr;
+    grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    grpc_set_header X-Forwarded-Proto $scheme;
+}
+
+# VPN маршруты - Trojan gRPC
+location {{ trojan_grpc_path }} {
+    grpc_pass grpc://xray-server:10013;
+    grpc_set_header Host $host;
+    grpc_set_header X-Real-IP $remote_addr;
+    grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    grpc_set_header X-Forwarded-Proto $scheme;
+} 

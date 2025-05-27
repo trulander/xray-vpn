@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # Nginx Proxy с автоматическим SSL
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: xray-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./data/ssl:/etc/nginx/certs
+      - ./data/www:/usr/share/nginx/html
+      - ./config/nginx:/etc/nginx/vhost.d:ro
+    environment:
+      - DEFAULT_HOST=${DOMAIN:-example.com}
+      - TRUST_DOWNSTREAM_PROXY=false
+    networks:
+      - xray-network
+
+  # Acme Companion для автоматических SSL сертификатов
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: xray-acme-companion
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/ssl:/etc/nginx/certs
+      - ./data/www:/usr/share/nginx/html
+      - /var/run/acme.sh:/var/run/acme.sh
+    environment:
+      - DEFAULT_EMAIL=${EMAIL:-admin@example.com}
+      - NGINX_PROXY_CONTAINER=xray-nginx-proxy
+    networks:
+      - xray-network
+    depends_on:
+      - nginx-proxy
+
+  # Демо веб-сайт (fallback для обычного трафика)
+  demo-website:
+    image: nginx:alpine
+    container_name: xray-demo-website
+    restart: unless-stopped
+    volumes:
+      - ./data/www:/usr/share/nginx/html:ro
+      - ./config/nginx/demo-site.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - VIRTUAL_HOST=${DOMAIN:-example.com}
+      - LETSENCRYPT_HOST=${DOMAIN:-example.com}
+      - LETSENCRYPT_EMAIL=${EMAIL:-admin@example.com}
+    networks:
+      - xray-network
+
+  # Xray VPN сервер с множественными протоколами
+  xray-server:
+    image: teddysun/xray:latest
+    container_name: xray-server
+    restart: unless-stopped
+    volumes:
+      - ./config/xray/config.json:/etc/xray/config.json:ro
+      - ./data/xray/logs:/var/log/xray
+    networks:
+      - xray-network
+
+  # Генератор конфигураций
+  config-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: xray-config-generator
+    profiles:
+      - tools
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
+      - EMAIL=${EMAIL:-admin@example.com}
+      - SERVER_IP=${SERVER_IP:-127.0.0.1}
+      - VMESS_UUID=${VMESS_UUID:-}
+      - VLESS_UUID=${VLESS_UUID:-}
+      - TROJAN_PASSWORD=${TROJAN_PASSWORD:-}
+      - VMESS_WS_PATH=${VMESS_WS_PATH:-}
+      - VLESS_WS_PATH=${VLESS_WS_PATH:-}
+      - TROJAN_WS_PATH=${TROJAN_WS_PATH:-}
+      - VMESS_GRPC_PATH=${VMESS_GRPC_PATH:-}
+      - VLESS_GRPC_PATH=${VLESS_GRPC_PATH:-}
+      - TROJAN_GRPC_PATH=${TROJAN_GRPC_PATH:-}
+      - VMESS_GRPC_SERVICE=${VMESS_GRPC_SERVICE:-}
+      - VLESS_GRPC_SERVICE=${VLESS_GRPC_SERVICE:-}
+      - TROJAN_GRPC_SERVICE=${TROJAN_GRPC_SERVICE:-}
+      - LOG_LEVEL=${LOG_LEVEL:-warning}
+      - ENABLE_STATS=${ENABLE_STATS:-false}
+      - UID=${UID:-1000}
+      - GID=${GID:-1000}
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./:/app/workspace
+    networks:
+      - xray-network
+
+networks:
+  xray-network:
+    driver: bridge
+
+volumes:
+  nginx-logs:
+  certbot-logs:
+  xray-logs: 

@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Основные страницы
+Allow: /index.html
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.ico
+Allow: /*.svg
+
+# Запрещаем индексацию служебных файлов
+Disallow: /.well-known/
+Disallow: /config/
+Disallow: /logs/
+
+# Sitemap
+Sitemap: https://{{ domain }}/sitemap.xml
+
+# Crawl-delay для ботов
+Crawl-delay: 1 

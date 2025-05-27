@@ -1,0 +1,45 @@
+server {
+    listen 80;
+    server_name localhost;
+    
+    root /usr/share/nginx/html;
+    index index.html index.htm;
+    
+    # Основные настройки
+    server_tokens off;
+    
+    # Gzip сжатие
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/json
+        application/javascript
+        application/xml+rss
+        application/atom+xml
+        image/svg+xml;
+    
+    # Обработка статических файлов
+    location / {
+        try_files $uri $uri/ =404;
+        
+        # Кэширование статических файлов
+        location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    # Безопасность
+    location ~ /\. {
+        deny all;
+    }
+    
+    # Логирование
+    access_log /var/log/nginx/demo_access.log;
+    error_log /var/log/nginx/demo_error.log;
+} 
