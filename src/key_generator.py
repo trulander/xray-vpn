@@ -107,24 +107,24 @@ class KeyGenerator:
         protocol_services = {
             'vmess': [
                 'VmessService',
-                'TunnelService',
-                'ProxyService',
-                'StreamService',
-                'DataService'
+                'VmessDataService',
+                'VmessProxyService',
+                'VmessStreamService',
+                'VmessTunnelService'
             ],
             'vless': [
                 'VlessService',
-                'TunnelService',
-                'ProxyService',
-                'StreamService',
-                'DataService'
+                'VlessDataService', 
+                'VlessProxyService',
+                'VlessStreamService',
+                'VlessTunnelService'
             ],
             'trojan': [
                 'TrojanService',
-                'TunnelService',
-                'ProxyService',
-                'StreamService',
-                'DataService'
+                'TrojanDataService',
+                'TrojanProxyService', 
+                'TrojanStreamService',
+                'TrojanTunnelService'
             ],
             'generic': [
                 'TunnelService',

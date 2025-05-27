@@ -79,19 +79,58 @@ def init_project(args: argparse.Namespace) -> None:
         print(f"✅ Сгенерирован Trojan WS путь: {env_vars['trojan_ws_path']}")
     
     # Генерируем gRPC сервисы если они не заданы
+    used_grpc_paths = set()
+    used_grpc_services = set()
+    
+    # Учитываем уже существующие значения
+    if env_vars['vmess_grpc_path'] and env_vars['vmess_grpc_path'] != '/vmess/grpc':
+        used_grpc_paths.add(env_vars['vmess_grpc_path'])
+    if env_vars['vmess_grpc_service'] and env_vars['vmess_grpc_service'] != 'VmessService':
+        used_grpc_services.add(env_vars['vmess_grpc_service'])
+    if env_vars['vless_grpc_path'] and env_vars['vless_grpc_path'] != '/vless/grpc':
+        used_grpc_paths.add(env_vars['vless_grpc_path'])
+    if env_vars['vless_grpc_service'] and env_vars['vless_grpc_service'] != 'VlessService':
+        used_grpc_services.add(env_vars['vless_grpc_service'])
+    if env_vars['trojan_grpc_path'] and env_vars['trojan_grpc_path'] != '/trojan/grpc':
+        used_grpc_paths.add(env_vars['trojan_grpc_path'])
+    if env_vars['trojan_grpc_service'] and env_vars['trojan_grpc_service'] != 'TrojanService':
+        used_grpc_services.add(env_vars['trojan_grpc_service'])
+    
     if not env_vars['vmess_grpc_service'] or env_vars['vmess_grpc_service'] == 'VmessService':
         env_vars['vmess_grpc_service'] = key_gen.generate_grpc_service_name('vmess')
         env_vars['vmess_grpc_path'] = key_gen.generate_grpc_path(env_vars['vmess_grpc_service'])
+        used_grpc_paths.add(env_vars['vmess_grpc_path'])
+        used_grpc_services.add(env_vars['vmess_grpc_service'])
         print(f"✅ Сгенерирован VMess gRPC сервис: {env_vars['vmess_grpc_service']}")
     
     if not env_vars['vless_grpc_service'] or env_vars['vless_grpc_service'] == 'VlessService':
-        env_vars['vless_grpc_service'] = key_gen.generate_grpc_service_name('vless')
-        env_vars['vless_grpc_path'] = key_gen.generate_grpc_path(env_vars['vless_grpc_service'])
+        # Перегенерируем если путь/сервис уже используется
+        attempts = 0
+        while attempts < 10:
+            service_name = key_gen.generate_grpc_service_name('vless')
+            service_path = key_gen.generate_grpc_path(service_name)
+            if service_path not in used_grpc_paths and service_name not in used_grpc_services:
+                env_vars['vless_grpc_service'] = service_name
+                env_vars['vless_grpc_path'] = service_path
+                used_grpc_paths.add(service_path)
+                used_grpc_services.add(service_name)
+                break
+            attempts += 1
         print(f"✅ Сгенерирован VLESS gRPC сервис: {env_vars['vless_grpc_service']}")
     
     if not env_vars['trojan_grpc_service'] or env_vars['trojan_grpc_service'] == 'TrojanService':
-        env_vars['trojan_grpc_service'] = key_gen.generate_grpc_service_name('trojan')
-        env_vars['trojan_grpc_path'] = key_gen.generate_grpc_path(env_vars['trojan_grpc_service'])
+        # Перегенерируем если путь/сервис уже используется
+        attempts = 0
+        while attempts < 10:
+            service_name = key_gen.generate_grpc_service_name('trojan')
+            service_path = key_gen.generate_grpc_path(service_name)
+            if service_path not in used_grpc_paths and service_name not in used_grpc_services:
+                env_vars['trojan_grpc_service'] = service_name
+                env_vars['trojan_grpc_path'] = service_path
+                used_grpc_paths.add(service_path)
+                used_grpc_services.add(service_name)
+                break
+            attempts += 1
         print(f"✅ Сгенерирован Trojan gRPC сервис: {env_vars['trojan_grpc_service']}")
     
     # Генерируем секретный путь если он не задан
