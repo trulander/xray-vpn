@@ -15,7 +15,6 @@ services:
       - ./data/www:/usr/share/nginx/html
       - ./data/secret-configs:/usr/share/secret-configs:ro
       - ./config/nginx:/etc/nginx/vhost.d:ro
-      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
     environment:
       - DEFAULT_HOST=${DOMAIN:-example.com}
       - TRUST_DOWNSTREAM_PROXY=false

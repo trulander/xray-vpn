@@ -234,12 +234,6 @@ class ConfigGenerator:
         template = self.env.get_template('nginx_custom.conf.j2')
         return template.render(**vars)
     
-    def generate_nginx_default_config(self) -> str:
-        """Генерация default конфигурации nginx для блокировки неавторизованных запросов"""
-        vars = self.get_env_vars()
-        template = self.env.get_template('nginx_default.conf.j2')
-        return template.render(**vars)
-    
     def generate_config_page(self) -> str:
         """Генерация HTML страницы для скачивания конфигураций"""
         vars = self.get_env_vars()
@@ -382,20 +376,6 @@ class ConfigGenerator:
         with open(domain_file, 'w', encoding='utf-8') as f:
             f.write(nginx_domain_config)
         print(f"✅ Создан файл домена: {domain_file}")
-        
-        # Создаем конфигурацию по умолчанию для блокировки неавторизованных запросов
-        print("🔧 Генерация default конфигурации nginx...")
-        nginx_default_config = self.generate_nginx_default_config()
-        
-        # Создаем директорию conf.d если не существует
-        conf_d_dir = nginx_dir / 'conf.d'
-        conf_d_dir.mkdir(exist_ok=True)
-        
-        # Сохраняем default конфигурацию
-        default_file = conf_d_dir / 'default.conf'
-        with open(default_file, 'w', encoding='utf-8') as f:
-            f.write(nginx_default_config)
-        print(f"✅ Создан default файл: {default_file}")
         
         # Генерация конфигурации демо сайта
         print("🔧 Генерация конфигурации демо сайта...")
