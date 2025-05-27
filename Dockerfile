@@ -8,11 +8,6 @@ RUN apt-get update && apt-get install -y \
     openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Копирование файлов проекта
-COPY pyproject.toml .
-COPY src/ ./src/
-COPY templates/ ./templates/
-
 # Установка Python зависимостей
 RUN pip install --no-cache-dir \
     docker>=7.0.0 \
@@ -26,5 +21,5 @@ RUN pip install --no-cache-dir \
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Точка входа
+# Точка входа - файлы будут доступны через volume в /app/workspace
 ENTRYPOINT ["python", "-m", "src.main"] 

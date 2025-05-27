@@ -177,4 +177,28 @@ class KeyGenerator:
         path = secrets.choice(paths)
         param = secrets.choice(params) if secrets.randbelow(2) else ''
         
-        return f"{path}{param}" 
+        return f"{path}{param}"
+    
+    def generate_secret_path(self) -> str:
+        """Генерация секретного пути для страницы конфигураций"""
+        
+        # Генерируем случайный 16-символьный путь
+        alphabet = string.ascii_lowercase + string.digits
+        random_part = ''.join(secrets.choice(alphabet) for _ in range(16))
+        
+        # Случайные префиксы для маскировки
+        prefixes = [
+            '/admin',
+            '/panel', 
+            '/dashboard',
+            '/config',
+            '/settings',
+            '/manage',
+            '/control',
+            '/secure',
+            '/private',
+            '/internal'
+        ]
+        
+        prefix = secrets.choice(prefixes)
+        return f"{prefix}/{random_part}" 

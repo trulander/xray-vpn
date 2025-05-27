@@ -66,33 +66,38 @@ def init_project(args: argparse.Namespace) -> None:
         print(f"✅ Сгенерирован Trojan пароль: {env_vars['trojan_password']}")
     
     # Генерируем пути если они не заданы
-    if env_vars['vmess_ws_path'] == '/vmess/ws':
+    if not env_vars['vmess_ws_path'] or env_vars['vmess_ws_path'] == '/vmess/ws':
         env_vars['vmess_ws_path'] = key_gen.generate_ws_path('vmess')
         print(f"✅ Сгенерирован VMess WS путь: {env_vars['vmess_ws_path']}")
     
-    if env_vars['vless_ws_path'] == '/vless/ws':
+    if not env_vars['vless_ws_path'] or env_vars['vless_ws_path'] == '/vless/ws':
         env_vars['vless_ws_path'] = key_gen.generate_ws_path('vless')
         print(f"✅ Сгенерирован VLESS WS путь: {env_vars['vless_ws_path']}")
     
-    if env_vars['trojan_ws_path'] == '/trojan/ws':
+    if not env_vars['trojan_ws_path'] or env_vars['trojan_ws_path'] == '/trojan/ws':
         env_vars['trojan_ws_path'] = key_gen.generate_ws_path('trojan')
         print(f"✅ Сгенерирован Trojan WS путь: {env_vars['trojan_ws_path']}")
     
     # Генерируем gRPC сервисы если они не заданы
-    if env_vars['vmess_grpc_service'] == 'VmessService':
+    if not env_vars['vmess_grpc_service'] or env_vars['vmess_grpc_service'] == 'VmessService':
         env_vars['vmess_grpc_service'] = key_gen.generate_grpc_service_name('vmess')
         env_vars['vmess_grpc_path'] = key_gen.generate_grpc_path(env_vars['vmess_grpc_service'])
         print(f"✅ Сгенерирован VMess gRPC сервис: {env_vars['vmess_grpc_service']}")
     
-    if env_vars['vless_grpc_service'] == 'VlessService':
+    if not env_vars['vless_grpc_service'] or env_vars['vless_grpc_service'] == 'VlessService':
         env_vars['vless_grpc_service'] = key_gen.generate_grpc_service_name('vless')
         env_vars['vless_grpc_path'] = key_gen.generate_grpc_path(env_vars['vless_grpc_service'])
         print(f"✅ Сгенерирован VLESS gRPC сервис: {env_vars['vless_grpc_service']}")
     
-    if env_vars['trojan_grpc_service'] == 'TrojanService':
+    if not env_vars['trojan_grpc_service'] or env_vars['trojan_grpc_service'] == 'TrojanService':
         env_vars['trojan_grpc_service'] = key_gen.generate_grpc_service_name('trojan')
         env_vars['trojan_grpc_path'] = key_gen.generate_grpc_path(env_vars['trojan_grpc_service'])
         print(f"✅ Сгенерирован Trojan gRPC сервис: {env_vars['trojan_grpc_service']}")
+    
+    # Генерируем секретный путь если он не задан
+    if not env_vars['secret_config_path'] or env_vars['secret_config_path'] == '/secret/configs':
+        env_vars['secret_config_path'] = key_gen.generate_secret_path()
+        print(f"✅ Сгенерирован секретный путь: {env_vars['secret_config_path']}")
     
     # Сохранение .env файла
     env_content = config_gen.env.get_template('env_multi.j2').render(**env_vars)
@@ -102,6 +107,9 @@ def init_project(args: argparse.Namespace) -> None:
         f.write(env_content)
     
     print("✅ Файл .env создан/обновлен")
+    
+    # Перезагружаем переменные окружения в существующем ConfigGenerator
+    config_gen.reload_env_vars()
     
     # Генерация всех конфигураций
     config_gen.generate_all_configs()

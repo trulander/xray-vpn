@@ -74,4 +74,36 @@ location {{ trojan_grpc_path }} {
     grpc_set_header X-Real-IP $remote_addr;
     grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     grpc_set_header X-Forwarded-Proto $scheme;
+}
+
+# Секретная страница конфигураций
+location {{ secret_config_path }} {
+    alias /usr/share/nginx/html/configs/;
+    try_files $uri $uri/ /configs/index.html;
+    
+    # Заголовки безопасности
+    add_header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    
+    # Кэширование конфигураций
+    location ~* \.(json)$ {
+        add_header Content-Disposition "attachment";
+        add_header Content-Type "application/json";
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+}
+
+# Обслуживание файлов конфигураций
+location /configs/ {
+    alias /usr/share/nginx/html/configs/;
+    
+    # Заголовки для скачивания
+    location ~* \.(json)$ {
+        add_header Content-Disposition "attachment";
+        add_header Content-Type "application/json";
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
 } 

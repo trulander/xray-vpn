@@ -27,6 +27,12 @@ class ConfigGenerator:
         templates_path = '/app/workspace/templates' if Path('/app/workspace/templates').exists() else 'templates'
         self.env = Environment(loader=FileSystemLoader(templates_path))
     
+    def reload_env_vars(self):
+        """Принудительная перезагрузка переменных окружения из .env файла"""
+        env_path = '/app/workspace/.env' if Path('/app/workspace/.env').exists() else '.env'
+        if Path(env_path).exists():
+            load_dotenv(env_path, override=True)
+    
     def get_env_vars(self) -> Dict[str, Any]:
         """Получение переменных окружения"""
         return {
@@ -36,26 +42,29 @@ class ConfigGenerator:
             'email': os.getenv('EMAIL', 'admin@example.com'),
             
             # UUID для протоколов
-            'vmess_uuid': os.getenv('VMESS_UUID', ''),
-            'vless_uuid': os.getenv('VLESS_UUID', ''),
+            'vmess_uuid': os.getenv('VMESS_UUID') or '',
+            'vless_uuid': os.getenv('VLESS_UUID') or '',
             
             # Пароль для Trojan
-            'trojan_password': os.getenv('TROJAN_PASSWORD', ''),
+            'trojan_password': os.getenv('TROJAN_PASSWORD') or '',
             
             # Пути для WebSocket
-            'vmess_ws_path': os.getenv('VMESS_WS_PATH', '/vmess/ws'),
-            'vless_ws_path': os.getenv('VLESS_WS_PATH', '/vless/ws'),
-            'trojan_ws_path': os.getenv('TROJAN_WS_PATH', '/trojan/ws'),
+            'vmess_ws_path': os.getenv('VMESS_WS_PATH') or '/vmess/ws',
+            'vless_ws_path': os.getenv('VLESS_WS_PATH') or '/vless/ws',
+            'trojan_ws_path': os.getenv('TROJAN_WS_PATH') or '/trojan/ws',
             
             # Пути для gRPC
-            'vmess_grpc_path': os.getenv('VMESS_GRPC_PATH', '/vmess/grpc'),
-            'vless_grpc_path': os.getenv('VLESS_GRPC_PATH', '/vless/grpc'),
-            'trojan_grpc_path': os.getenv('TROJAN_GRPC_PATH', '/trojan/grpc'),
+            'vmess_grpc_path': os.getenv('VMESS_GRPC_PATH') or '/vmess/grpc',
+            'vless_grpc_path': os.getenv('VLESS_GRPC_PATH') or '/vless/grpc',
+            'trojan_grpc_path': os.getenv('TROJAN_GRPC_PATH') or '/trojan/grpc',
             
             # Сервисы для gRPC
-            'vmess_grpc_service': os.getenv('VMESS_GRPC_SERVICE', 'VmessService'),
-            'vless_grpc_service': os.getenv('VLESS_GRPC_SERVICE', 'VlessService'),
-            'trojan_grpc_service': os.getenv('TROJAN_GRPC_SERVICE', 'TrojanService'),
+            'vmess_grpc_service': os.getenv('VMESS_GRPC_SERVICE') or 'VmessService',
+            'vless_grpc_service': os.getenv('VLESS_GRPC_SERVICE') or 'VlessService',
+            'trojan_grpc_service': os.getenv('TROJAN_GRPC_SERVICE') or 'TrojanService',
+            
+            # Секретная страница конфигураций
+            'secret_config_path': os.getenv('SECRET_CONFIG_PATH') or '/secret/configs',
             
             # Настройки логирования
             'log_level': os.getenv('LOG_LEVEL', 'warning'),
@@ -219,6 +228,66 @@ class ConfigGenerator:
         template = self.env.get_template('nginx_custom.conf.j2')
         return template.render(**vars)
     
+    def generate_config_page(self) -> str:
+        """Генерация HTML страницы для скачивания конфигураций"""
+        vars = self.get_env_vars()
+        
+        # Генерируем VMess Base64 для URL
+        import json
+        import base64
+        
+        vmess_config = {
+            'v': '2',
+            'ps': 'Xray-VMess-WS',
+            'add': vars['domain'],
+            'port': '443',
+            'id': vars['vmess_uuid'],
+            'aid': '0',
+            'scy': 'auto',
+            'net': 'ws',
+            'type': 'none',
+            'host': vars['domain'],
+            'path': vars['vmess_ws_path'],
+            'tls': 'tls',
+            'sni': vars['domain']
+        }
+        
+        vmess_json = json.dumps(vmess_config, separators=(',', ':'))
+        vmess_b64 = base64.b64encode(vmess_json.encode()).decode()
+        vars['vmess_b64_config'] = vmess_b64
+        
+        template = self.env.get_template('config_page.html.j2')
+        return template.render(**vars)
+    
+    def generate_config_files(self) -> None:
+        """Генерация файлов конфигураций для веб-страницы"""
+        # В контейнере всегда используем /app, локально - текущую директорию
+        if Path('/app/workspace').exists():
+            base_path = Path('/app')
+        else:
+            base_path = Path('.')
+            
+        configs_dir = base_path / 'data' / 'www' / 'configs'
+        configs_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Генерация страницы конфигураций
+        print("🔧 Генерация страницы конфигураций...")
+        config_page_content = self.generate_config_page()
+        with open(configs_dir / 'index.html', 'w', encoding='utf-8') as f:
+            f.write(config_page_content)
+        
+        # Копируем клиентские конфигурации в папку configs
+        client_dir = base_path / 'config' / 'client'
+        if client_dir.exists():
+            print("🔧 Копирование клиентских конфигураций...")
+            for config_file in client_dir.glob('*.json'):
+                # Копируем файл в configs директорию
+                with open(config_file, 'r', encoding='utf-8') as src:
+                    with open(configs_dir / config_file.name, 'w', encoding='utf-8') as dst:
+                        dst.write(src.read())
+        
+        print(f"✅ Секретная страница создана в: {configs_dir}")
+    
     def generate_website_files(self) -> None:
         """Генерация файлов веб-сайта"""
         vars = self.get_env_vars()
@@ -311,5 +380,8 @@ class ConfigGenerator:
         # Генерация файлов веб-сайта
         print("🔧 Генерация файлов веб-сайта...")
         self.generate_website_files()
+        
+        # Генерация файлов конфигураций для веб-страницы
+        self.generate_config_files()
         
         print("✅ Все конфигурации для nginx-proxy архитектуры сгенерированы!") 

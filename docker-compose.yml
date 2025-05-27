@@ -73,7 +73,9 @@ services:
     profiles:
       - tools
     user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /app/workspace
     environment:
+      - PYTHONPATH=/app/workspace
       - DOMAIN=${DOMAIN:-example.com}
       - EMAIL=${EMAIL:-admin@example.com}
       - SERVER_IP=${SERVER_IP:-127.0.0.1}
@@ -89,6 +91,7 @@ services:
       - VMESS_GRPC_SERVICE=${VMESS_GRPC_SERVICE:-}
       - VLESS_GRPC_SERVICE=${VLESS_GRPC_SERVICE:-}
       - TROJAN_GRPC_SERVICE=${TROJAN_GRPC_SERVICE:-}
+      - SECRET_CONFIG_PATH=${SECRET_CONFIG_PATH:-}
       - LOG_LEVEL=${LOG_LEVEL:-warning}
       - ENABLE_STATS=${ENABLE_STATS:-false}
       - UID=${UID:-1000}
