@@ -222,6 +222,12 @@ class ConfigGenerator:
         template = self.env.get_template('demo_site.conf.j2')
         return template.render(**vars)
     
+    def generate_nginx_domain_config(self) -> str:
+        """Генерация конфигурации домена для nginx-proxy с секретной страницей"""
+        vars = self.get_env_vars()
+        template = self.env.get_template('nginx_domain.conf.j2')
+        return template.render(**vars)
+    
     def generate_nginx_custom_config(self) -> str:
         """Генерация кастомной конфигурации для nginx-proxy"""
         vars = self.get_env_vars()
@@ -267,7 +273,8 @@ class ConfigGenerator:
         else:
             base_path = Path('.')
             
-        configs_dir = base_path / 'data' / 'www' / 'configs'
+        # Создаем отдельную директорию для конфигураций вне www
+        configs_dir = base_path / 'data' / 'secret-configs'
         configs_dir.mkdir(parents=True, exist_ok=True)
         
         # Генерация страницы конфигураций
@@ -363,6 +370,16 @@ class ConfigGenerator:
         # Также создаем общий файл для совместимости
         with open(nginx_dir / 'nginx_custom.conf', 'w', encoding='utf-8') as f:
             f.write(nginx_custom_config)
+        
+        # Генерация конфигурации домена с секретной страницей
+        print("🔧 Генерация конфигурации домена с секретной страницей...")
+        nginx_domain_config = self.generate_nginx_domain_config()
+        
+        # nginx-proxy ищет файлы в формате {domain} для конфигурации всего домена
+        domain_file = nginx_dir / domain
+        with open(domain_file, 'w', encoding='utf-8') as f:
+            f.write(nginx_domain_config)
+        print(f"✅ Создан файл домена: {domain_file}")
         
         # Генерация конфигурации демо сайта
         print("🔧 Генерация конфигурации демо сайта...")

@@ -13,6 +13,7 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./data/ssl:/etc/nginx/certs
       - ./data/www:/usr/share/nginx/html
+      - ./data/secret-configs:/usr/share/secret-configs:ro
       - ./config/nginx:/etc/nginx/vhost.d:ro
     environment:
       - DEFAULT_HOST=${DOMAIN:-example.com}

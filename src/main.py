@@ -127,6 +127,8 @@ def generate_configs(args: argparse.Namespace) -> None:
     print("🔧 Генерация конфигураций...")
     
     config_gen = ConfigGenerator()
+    # Перезагружаем переменные окружения для использования актуальных значений
+    config_gen.reload_env_vars()
     config_gen.generate_all_configs()
     
     print("✅ Конфигурации сгенерированы в папке config/")
