@@ -29,8 +29,8 @@ SSL сертификаты получаются **автоматически** �
 ```
 Internet → nginx-proxy (80/443) → {
   /api/v1/vmess → xray-server:10001 (VMess WebSocket)
-  /ws/vless → xray-server:10001 (VLESS WebSocket)  
-  /stream/trojan → xray-server:10001 (Trojan WebSocket)
+  /ws/vless → xray-server:10002 (VLESS WebSocket)  
+  /stream/trojan → xray-server:10003 (Trojan WebSocket)
   /* → demo-website (маскировка)
 }
 ```
@@ -55,9 +55,12 @@ Internet → nginx-proxy (80/443) → {
 
 ### Конфигурации
 После развертывания найдите файлы в `config/client/`:
-- `vmess-ws.json` - VMess WebSocket
-- `vless-ws.json` - VLESS WebSocket
-- `trojan-ws.json` - Trojan WebSocket
+- `vmess_ws.json` - VMess WebSocket
+- `vless_ws.json` - VLESS WebSocket
+- `trojan_ws.json` - Trojan WebSocket
+- `vmess_grpc.json` - VMess gRPC
+- `vless_grpc.json` - VLESS gRPC  
+- `trojan_grpc.json` - Trojan gRPC
 
 ## 🛠️ Управление
 
@@ -78,6 +81,9 @@ docker-compose down
 
 # Генерация новых клиентских конфигураций
 docker-compose --profile tools run --rm config-generator generate-client vless ws
+
+# Генерация URL для мобильных приложений
+docker-compose --profile tools run --rm config-generator generate-client vless ws -u
 ```
 
 ## 🔒 Безопасность
@@ -92,7 +98,13 @@ docker-compose --profile tools run --rm config-generator generate-client vless w
 
 ### Диагностика проблем
 
-Запустите скрипт диагностики для анализа проблем:
+```bash
+# Общая диагностика SSL и сервисов
+./scripts/diagnose-ssl.sh
+
+# Тестирование подключений
+./scripts/test_connections.sh
+```
 
 ### Проверка SSL сертификатов
 
@@ -110,13 +122,10 @@ ls -la data/ssl/
 docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)"
 ```
 
-### Диагностика
+### Проверка сайта и VPN путей
 
 ```bash
-# Проверка статуса всех сервисов
-docker-compose ps
-
-# Проверка сайта
+# Проверка основного сайта
 curl -I https://example.com
 
 # Проверка конфигурации nginx-proxy
@@ -137,7 +146,7 @@ curl -I https://example.com
 
 ## 📋 Технологии
 
-- **Xray-core** - VPN сервер
+- **Xray-core** - VPN сервер с поддержкой VMess, VLESS, Trojan
 - **nginx-proxy** - Автоматический reverse proxy
 - **acme-companion** - Автоматические SSL сертификаты
 - **Docker** - Контейнеризация
@@ -147,7 +156,14 @@ curl -I https://example.com
 ## 📚 Документация
 
 - [Быстрый старт](QUICK_START.md) - Краткие инструкции
-- [Развертывание](LOCAL_DEPLOYMENT.md) - Локальное развертывание
+- [Пример развертывания](EXAMPLE.md) - Пошаговый пример
 - [Использование](USAGE.md) - Руководство пользователя
 - [Шаблоны](docs/templates.md) - Кастомизация конфигураций
+- [Архитектура nginx-proxy](docs/nginx-proxy-architecture.md) - Детали архитектуры
+
+## 🔧 Скрипты
+
+- `deploy.sh` - Основной скрипт развертывания
+- `scripts/diagnose-ssl.sh` - Диагностика SSL и nginx-proxy
+- `scripts/test_connections.sh` - Тестирование подключений
  

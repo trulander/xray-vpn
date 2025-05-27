@@ -6,13 +6,18 @@
 
 ```
 templates/
-├── env.j2                 # Шаблон .env файла
-├── xray_server.json.j2    # Серверная конфигурация Xray
-├── xray_client.json.j2    # Клиентская конфигурация Xray
-├── nginx_custom.conf.j2   # Кастомная конфигурация nginx-proxy
-├── demo_site.conf.j2      # Конфигурация демо сайта
-├── index.html.j2          # Демо веб-сайт
-└── robots.txt.j2          # Файл robots.txt
+├── env_multi.j2           # Шаблон .env файла для мульти-протокола
+├── xray_server_multi.json.j2    # Серверная конфигурация Xray (все протоколы)
+├── client_vmess_ws.json.j2      # VMess WebSocket клиент
+├── client_vless_ws.json.j2      # VLESS WebSocket клиент  
+├── client_trojan_ws.json.j2     # Trojan WebSocket клиент
+├── client_vmess_grpc.json.j2    # VMess gRPC клиент
+├── client_vless_grpc.json.j2    # VLESS gRPC клиент
+├── client_trojan_grpc.json.j2   # Trojan gRPC клиент
+├── nginx_custom.conf.j2         # Кастомные location блоки для nginx-proxy
+├── demo_site.conf.j2            # Конфигурация демо сайта
+├── index.html.j2                # Демо веб-сайт
+└── robots.txt.j2                # Файл robots.txt
 ```
 
 ## Переменные шаблонов
@@ -24,16 +29,23 @@ templates/
 - `server_ip` - IP адрес сервера (например: `YOUR_SERVER_IP`)
 - `email` - email для SSL сертификатов (например: `admin@example.com`)
 
-### Xray настройки
-- `uuid` - UUID клиента (генерируется автоматически)
-- `private_key` - приватный ключ X25519 для REALITY (генерируется автоматически)
-- `public_key` - публичный ключ X25519 для REALITY (генерируется автоматически)
-- `short_id` - короткий ID для REALITY (генерируется автоматически)
-- `spider_x` - параметр spider X для клиентской конфигурации (генерируется автоматически)
+### Мульти-протокольные настройки
+- `vmess_uuid` - UUID для VMess протокола (генерируется автоматически)
+- `vless_uuid` - UUID для VLESS протокола (генерируется автоматически)
+- `trojan_password` - пароль для Trojan протокола (генерируется автоматически)
 
-### Fallback настройки
-- `fallback_sni` - SNI для fallback (по умолчанию: `www.microsoft.com`)
-- `fallback_dest` - назначение fallback (по умолчанию: `www.microsoft.com:443`)
+### Пути для WebSocket
+- `vmess_ws_path` - путь для VMess WebSocket (например: `/api/v1/vmess`)
+- `vless_ws_path` - путь для VLESS WebSocket (например: `/ws/vless`)
+- `trojan_ws_path` - путь для Trojan WebSocket (например: `/stream/trojan`)
+
+### Настройки gRPC
+- `vmess_grpc_path` - путь для VMess gRPC (например: `/vmess/grpc`)
+- `vless_grpc_path` - путь для VLESS gRPC (например: `/vless/grpc`)
+- `trojan_grpc_path` - путь для Trojan gRPC (например: `/trojan/grpc`)
+- `vmess_grpc_service` - имя сервиса VMess gRPC (например: `VmessService`)
+- `vless_grpc_service` - имя сервиса VLESS gRPC (например: `VlessService`)
+- `trojan_grpc_service` - имя сервиса Trojan gRPC (например: `TrojanService`)
 
 ### Безопасность и логирование
 - `log_level` - уровень логирования (по умолчанию: `warning`)
@@ -41,8 +53,8 @@ templates/
 
 ## Описание шаблонов
 
-### env.j2
-Генерирует файл переменных окружения `.env` со всеми необходимыми настройками.
+### env_multi.j2
+Генерирует файл переменных окружения `.env` со всеми настройками для мульти-протокольной архитектуры.
 
 **Использование:**
 ```python
@@ -50,47 +62,57 @@ template.render(
     domain='example.com',
     server_ip='YOUR_SERVER_IP',
     email='admin@example.com',
+    vmess_uuid='...',
+    vless_uuid='...',
+    trojan_password='...',
     # ... остальные переменные
 )
 ```
 
-### xray_server.json.j2
-Серверная конфигурация Xray с поддержкой:
-- VLESS протокол
-- XTLS+Vision шифрование
-- REALITY маскировка
-- Fallback на демо сайт
-- Опциональная статистика
+### xray_server_multi.json.j2
+Серверная конфигурация Xray с поддержкой всех протоколов:
+- VMess WebSocket (порт 10001)
+- VLESS WebSocket (порт 10002)
+- Trojan WebSocket (порт 10003)
+- VMess gRPC (порт 10011)
+- VLESS gRPC (порт 10012)
+- Trojan gRPC (порт 10013)
 
 **Особенности:**
 - Условное включение статистики через `{% if enable_stats %}`
 - Блокировка локального трафика
-- Настройка REALITY с приватным ключом
-- Fallback на контейнер `xray-demo-website:80`
+- Поддержка всех современных протоколов
 
-### xray_client.json.j2
-Клиентская конфигурация Xray с поддержкой:
-- SOCKS5 прокси (порт 10808)
-- HTTP прокси (порт 10809)
-- VLESS+REALITY подключение
-- Прямое подключение для локального трафика
+### Клиентские шаблоны
+Клиентские конфигурации для различных протоколов и транспортов:
+
+**WebSocket клиенты:**
+- `client_vmess_ws.json.j2` - VMess WebSocket
+- `client_vless_ws.json.j2` - VLESS WebSocket
+- `client_trojan_ws.json.j2` - Trojan WebSocket
+
+**gRPC клиенты:**
+- `client_vmess_grpc.json.j2` - VMess gRPC
+- `client_vless_grpc.json.j2` - VLESS gRPC
+- `client_trojan_grpc.json.j2` - Trojan gRPC
 
 **Особенности:**
-- Автоматическая генерация `spider_x` параметра
-- Настройка fingerprint для Chrome
-- Маршрутизация локального трафика
+- SOCKS5 прокси (порт 1080)
+- HTTP прокси (порт 1081)
+- Прямое подключение для локального трафика
+- Блокировка рекламы
 
 ### nginx_custom.conf.j2
 Кастомная конфигурация для nginx-proxy с:
-- Оптимизацией производительности (Gzip сжатие)
-- Заголовками безопасности
-- Настройками таймаутов и буферизации
-- Скрытием версии сервера
+- Location блоками для всех VPN путей (WebSocket и gRPC)
+- Правильной настройкой proxy headers
+- Таймаутами для WebSocket подключений
+- gRPC проксированием
 
 **Особенности:**
-- Подключается к nginx-proxy как дополнительная конфигурация
-- Применяется ко всем виртуальным хостам
-- Улучшает безопасность и производительность
+- Подключается к nginx-proxy как `{domain}_location` файл
+- Применяется автоматически при наличии переменных окружения
+- Поддерживает все протоколы и транспорты
 
 ### demo_site.conf.j2
 Конфигурация демо сайта с:
@@ -100,16 +122,16 @@ template.render(
 - Кэшированием статических ресурсов
 
 **Особенности:**
-- Используется контейнером `xray-demo-website`
-- Служит fallback для Xray трафика
+- Используется контейнером `demo-website`
+- Служит fallback для обычного трафика
 - Имитирует обычный веб-сайт
 
 ### index.html.j2
-Демо веб-сайт игрового портала с:
+Демо веб-сайт с:
 - Современным дизайном
 - Адаптивной версткой
 - CSS анимациями
-- Игровой тематикой
+- Профессиональным видом
 
 **Особенности:**
 - Полностью самодостаточный HTML файл
@@ -139,7 +161,7 @@ LETSENCRYPT_HOST=example.com    # Домен для SSL сертификата
 LETSENCRYPT_EMAIL=admin@example.com  # Email для Let's Encrypt
 ```
 
-### Преимущества новой архитектуры
+### Преимущества nginx-proxy архитектуры
 
 - ✅ **Автоматизация** - SSL сертификаты получаются и обновляются автоматически
 - ✅ **Простота** - не нужно вручную настраивать Nginx и Certbot
@@ -162,14 +184,13 @@ nano templates/nginx_custom.conf.j2
 ```
 
 ### Изменение конфигурации Xray
-Отредактируйте `templates/xray_server.json.j2` или `templates/xray_client.json.j2`:
+Отредактируйте `templates/xray_server_multi.json.j2`:
 ```bash
-nano templates/xray_server.json.j2
-nano templates/xray_client.json.j2
+nano templates/xray_server_multi.json.j2
 ```
 
 ### Добавление новых переменных
-1. Добавьте переменную в `templates/env.j2`
+1. Добавьте переменную в `templates/env_multi.j2`
 2. Обновите метод `get_env_vars()` в `src/config_generator.py`
 3. Используйте переменную в нужных шаблонах
 
@@ -179,7 +200,7 @@ nano templates/xray_client.json.j2
 
 ```bash
 # Регенерация всех конфигураций
-python -m src.main init \
+docker-compose --profile tools run --rm config-generator init \
   --domain your-domain.com \
   --email your@email.com \
   --server-ip your-ip
@@ -194,31 +215,27 @@ docker-compose restart
 Для проверки корректности JSON шаблонов можно использовать:
 ```bash
 # Генерация и проверка JSON
-python -c "
-from src.config_generator import ConfigGenerator
-import json
-cg = ConfigGenerator()
-json.loads(cg.generate_xray_server_config())
-json.loads(cg.generate_client_config())
-print('JSON шаблоны корректны')
-"
+docker-compose --profile tools run --rm config-generator generate
 ```
 
 ### Nginx шаблоны
-Для проверки конфигурации Nginx:
+Для проверки конфигурации nginx-proxy:
 ```bash
-# Проверка синтаксиса nginx-proxy
-docker run --rm -v $(pwd)/config/nginx:/etc/nginx/conf.d nginx:alpine nginx -t
+# Проверка сгенерированной конфигурации
+docker-compose exec nginx-proxy nginx -t
 ```
 
 ## Примеры использования
 
-### Создание кастомного шаблона
-```jinja2
-# templates/custom.conf.j2
-# Дополнительные настройки безопасности
-add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-add_header Content-Security-Policy "default-src 'self'" always;
+### Создание кастомного location блока
+```nginx
+# Добавить в templates/nginx_custom.conf.j2
+location /custom/path {
+    proxy_pass http://xray-server:10001;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
 ```
 
 ### Использование в коде
@@ -226,7 +243,7 @@ add_header Content-Security-Policy "default-src 'self'" always;
 from jinja2 import Environment, FileSystemLoader
 
 env = Environment(loader=FileSystemLoader('templates'))
-template = env.get_template('custom.conf.j2')
+template = env.get_template('nginx_custom.conf.j2')
 content = template.render(domain='example.com')
 ```
 
@@ -235,13 +252,13 @@ content = template.render(domain='example.com')
 ### Проверка переменных окружения
 ```bash
 # Проверка переменных контейнера
-docker exec xray-demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)"
+docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)"
 ```
 
 ### Проверка генерируемых конфигураций
 ```bash
 # Просмотр сгенерированных конфигураций nginx-proxy
-docker exec xray-nginx-proxy cat /etc/nginx/conf.d/default.conf
+docker-compose exec nginx-proxy cat /etc/nginx/conf.d/default.conf
 ```
 
 ### Логи nginx-proxy

@@ -40,39 +40,39 @@ cd xray-vpn
 ./deploy.sh vpn.example.com admin@example.com 203.0.113.10
 ```
 
-### 5. Настройка SSL
-```bash
-# После того как DNS заработал (может занять до 24 часов)
-./scripts/setup-ssl.sh vpn.example.com admin@example.com
-```
+**SSL сертификаты получаются автоматически через nginx-proxy + acme-companion!**
 
-### 6. Проверка
+### 5. Проверка работы
 ```bash
-# Проверка сайта
+# Проверка сайта (подождите 2-5 минут для получения SSL)
 curl -I https://vpn.example.com
 
 # Статус сервисов
 docker-compose ps
 
-# Логи
-docker-compose logs xray-server
+# Логи nginx-proxy и acme-companion
+docker-compose logs nginx-proxy acme-companion
+
+# Диагностика (если нужно)
+./scripts/diagnose-ssl.sh
 ```
 
 ## Результат
 
 ✅ **Сайт:** https://vpn.example.com  
 ✅ **Конфигурации:** `config/client/`  
-✅ **Протоколы:** VMess, VLESS, Trojan (WebSocket + gRPC)
+✅ **Протоколы:** VMess, VLESS, Trojan (WebSocket + gRPC)  
+✅ **SSL:** Автоматические сертификаты Let's Encrypt
 
 ## Использование клиентов
 
 ### Android (V2rayNG)
-1. Скачайте файл `config/client/vless-ws.json`
+1. Скачайте файл `config/client/vless_ws.json`
 2. В V2rayNG: ➕ → Import config from file
 3. Выберите скачанный файл
 
 ### Windows (V2rayN)
-1. Скачайте файл `config/client/vmess-ws.json`
+1. Скачайте файл `config/client/vmess_ws.json`
 2. В V2rayN: Servers → Import bulk URL from clipboard
 3. Скопируйте содержимое файла
 
@@ -93,6 +93,9 @@ docker-compose restart
 # Остановка
 docker-compose down
 
-# Обновление SSL (автоматически каждые 12 часов)
-docker-compose --profile tools run --rm certbot renew
+# Проверка SSL сертификатов (обновляются автоматически каждые 12 часов)
+docker-compose logs acme-companion
+
+# Тестирование подключений
+./scripts/test_connections.sh
 ``` 

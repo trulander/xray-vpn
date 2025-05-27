@@ -1,5 +1,5 @@
 """
-Генератор конфигураций для Xray и Nginx
+Генератор конфигураций для Xray и Nginx (мульти-протокольная архитектура с nginx-proxy)
 """
 
 import urllib.parse
@@ -13,7 +13,7 @@ from key_generator import KeyGenerator
 
 
 class ConfigGenerator:
-    """Генератор конфигураций для VPN сервера"""
+    """Генератор конфигураций для VPN сервера с nginx-proxy архитектурой"""
     
     def __init__(self):
         # Сначала пытаемся загрузить .env файл (если существует)
@@ -70,12 +70,6 @@ class ConfigGenerator:
         """Генерация серверной конфигурации Xray с множественными протоколами"""
         vars = self.get_env_vars()
         template = self.env.get_template('xray_server_multi.json.j2')
-        return template.render(**vars)
-    
-    def generate_nginx_config(self) -> str:
-        """Генерация основной конфигурации Nginx"""
-        vars = self.get_env_vars()
-        template = self.env.get_template('nginx.conf.j2')
         return template.render(**vars)
     
     def generate_client_config(self, protocol: str = 'vless', transport: str = 'ws') -> str:
@@ -219,6 +213,12 @@ class ConfigGenerator:
         template = self.env.get_template('demo_site.conf.j2')
         return template.render(**vars)
     
+    def generate_nginx_custom_config(self) -> str:
+        """Генерация кастомной конфигурации для nginx-proxy"""
+        vars = self.get_env_vars()
+        template = self.env.get_template('nginx_custom.conf.j2')
+        return template.render(**vars)
+    
     def generate_website_files(self) -> None:
         """Генерация файлов веб-сайта"""
         vars = self.get_env_vars()
@@ -247,7 +247,7 @@ class ConfigGenerator:
             f.write(robots_content)
     
     def generate_all_configs(self) -> None:
-        """Генерация всех конфигураций"""
+        """Генерация всех конфигураций для nginx-proxy архитектуры"""
         
         # В контейнере всегда используем /app, локально - текущую директорию  
         if Path('/app/workspace').exists():
@@ -275,17 +275,11 @@ class ConfigGenerator:
         
         print(f"🔧 Генерация для домена: {domain}")
         
-        # Генерация основной конфигурации Xray (для совместимости)
-        print("🔧 Генерация основной конфигурации Xray...")
+        # Генерация конфигурации Xray сервера
+        print("🔧 Генерация конфигурации Xray сервера...")
         xray_config = self.generate_xray_server_config()
         with open(xray_dir / 'config.json', 'w', encoding='utf-8') as f:
             f.write(xray_config)
-        
-        # Генерация конфигурации Nginx (не используется с nginx-proxy)
-        print("🔧 Генерация конфигурации Nginx...")
-        nginx_config = self.generate_nginx_config()
-        with open(nginx_dir / 'nginx.conf', 'w', encoding='utf-8') as f:
-            f.write(nginx_config)
         
         # Генерация кастомной конфигурации для nginx-proxy
         print("🔧 Генерация кастомной конфигурации nginx-proxy...")
@@ -317,9 +311,5 @@ class ConfigGenerator:
         # Генерация файлов веб-сайта
         print("🔧 Генерация файлов веб-сайта...")
         self.generate_website_files()
-
-    def generate_nginx_custom_config(self) -> str:
-        """Генерация кастомной конфигурации для nginx-proxy"""
-        vars = self.get_env_vars()
-        template = self.env.get_template('nginx_custom.conf.j2')
-        return template.render(**vars) 
+        
+        print("✅ Все конфигурации для nginx-proxy архитектуры сгенерированы!") 
