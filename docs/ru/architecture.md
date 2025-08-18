@@ -1,3 +1,5 @@
+[en](docs/en/architecture.md)
+
 # Архитектура Xray VPN Server
 
 ## Общая схема системы
@@ -20,11 +22,11 @@ graph TB
         subgraph "Docker Containers"
             XR[Xray Server<br/>Port 443<br/>VLESS+XTLS+Vision+REALITY]
             NG[Nginx<br/>Port 80<br/>Fallback Server]
-            CB[Certbot<br/>SSL Management]
+            CB[Acme Companion<br/>SSL Management]
         end
         
         subgraph "Volumes"
-            SSL[SSL Certificates<br/>/data/certbot/conf]
+            SSL[SSL Certificates<br/>./data/ssl]
             WWW[Website Files<br/>/data/www]
             CFG[Configurations<br/>/config]
         end
@@ -206,4 +208,4 @@ graph LR
     style STATS fill:#e8f5e8
     style HEALTH fill:#fff3e0
     style ALERTS fill:#ffebee
-``` 
+```

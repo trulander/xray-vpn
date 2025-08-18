@@ -1,15 +1,15 @@
-[ru](docs/ru/README.md)
+[ru](../../docs/ru/README.md)
 
 # Xray VPN Server
 
-This VPN server masquerades as a regular HTTPS website and supports multiple protocols and transports.
+This VPN server masquerades as a regular HTTPS website and supports a variety of protocols and transports.
 
 ## Quick Start
 
 ### Requirements
 - Ubuntu/Debian server with a public IP
 - Docker and Docker Compose
-- A domain pointing to your server
+- A domain pointed to your server
 
 ### Deployment
 
@@ -22,7 +22,7 @@ cd xray-vpn
 ./deploy.sh example.com admin@example.com 203.0.113.10
 ```
 
-**Done!** Your VPN server is up and running at https://example.com
+**Done!** Your VPN server is running and accessible at https://example.com
 
 SSL certificates are automatically issued and renewed using nginx-proxy and acme-companion.
 
@@ -33,7 +33,7 @@ Internet → nginx-proxy (80/443) → {
   /api/v1/vmess → xray-server:10001 (VMess WebSocket)
   /ws/vless → xray-server:10002 (VLESS WebSocket)  
   /stream/trojan → xray-server:10003 (Trojan WebSocket)
-  /* → demo-website (masquerading)
+  /* → demo-website (masking)
 }
 ```
 
@@ -41,7 +41,7 @@ Internet → nginx-proxy (80/443) → {
 
 - **nginx-proxy**: automatically creates virtual hosts
 - **acme-companion**: automatically obtains and renews SSL certificates
-- **xray-server**: a single server handles all protocols (VMess, VLESS, Trojan)
+- **xray-server**: one server handles all protocols (VMess, VLESS, Trojan)
 - **Environment variables**: `VIRTUAL_HOST`, `LETSENCRYPT_HOST`, `LETSENCRYPT_EMAIL`
 
 ## Client Applications
@@ -71,13 +71,13 @@ After deployment, you will get access to a **secret web page** where you can con
 ```bash
 # Link is displayed at the end of deployment
 ./deploy.sh example.com admin@example.com
-# Secret configuration page:
+# Secret configurations page:
 #    https://example.com/admin/a3b8c9d4e5f6...
 ```
 
 ### On the page you will find:
 - Configuration download - all protocols and transports
-- URL for mobile - ready-to-copy links
+- Mobile URL - ready-to-copy links
 - Instructions - for all popular applications
 - Security - random URL, protection from indexing
 
@@ -117,17 +117,17 @@ docker-compose --profile tools run --rm config-generator generate-client vless w
 
 ## Troubleshooting
 
-### Problem diagnostics
+### Diagnosing Issues
 
 ```bash
 # General SSL and service diagnostics
 ./scripts/diagnose-ssl.sh
 
-# Connection testing
+# Testing connections
 ./scripts/test_connections.sh
 ```
 
-### Check SSL certificates
+### Checking SSL Certificates
 
 ```bash
 # nginx-proxy status
@@ -143,7 +143,7 @@ ls -la data/ssl/
 docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)"
 ```
 
-### Check website and VPN paths
+### Checking Website and VPN Paths
 
 ```bash
 # Check main website
@@ -153,7 +153,7 @@ curl -I https://example.com
 docker-compose exec nginx-proxy cat /etc/nginx/conf.d/default.conf
 ```
 
-### Connection not working
+### Connection Not Working
 ```bash
 # Check configuration
 docker-compose --profile tools run --rm config-generator status
@@ -180,7 +180,7 @@ curl -I https://example.com
 - [Deployment Example](docs/en/EXAMPLE.md) - Step-by-step example
 - [Usage](docs/en/USAGE.md) - User guide
 - [Templates](docs/en/templates.md) - Configuration customization
-- [Nginx-proxy Architecture](docs/en/nginx-proxy-architecture.md) - Architecture details
+- [nginx-proxy Architecture](docs/en/nginx-proxy-architecture.md) - Architecture details
 
 ## Scripts
 
