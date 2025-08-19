@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Xray VPN Server - Генератор конфигураций
-Поддерживает множественные протоколы: VMess, VLESS, Trojan
-Транспорты: WebSocket, gRPC
+Xray VPN Server - Configuration Generator
+Supports multiple protocols: VMess, VLESS, Trojan
+Transports: WebSocket, gRPC
 """
 
 import os
@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-# Добавляем путь к модулям
+# Add path to modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config_generator import ConfigGenerator
@@ -21,68 +21,68 @@ from utils import setup_logging, check_dependencies, create_directories
 
 
 def init_project(args: argparse.Namespace) -> None:
-    """Инициализация проекта с генерацией ключей и конфигураций"""
+    """Initialize project with key and configuration generation"""
     
     domain = args.domain
     email = args.email or f"admin@{domain}"
     server_ip = args.server_ip
     
-    print("🚀 Инициализация Xray VPN Server...")
-    print(f"📋 Домен: {domain}")
-    print(f"📧 Email: {email}")
-    print(f"🌐 IP сервера: {server_ip}")
+    print("Initializing Xray VPN Server...")
+    print(f"Domain: {domain}")
+    print(f"Email: {email}")
+    print(f"Server IP: {server_ip}")
     
-    # Проверка зависимостей
+    # Check dependencies
     if not check_dependencies():
-        print("❌ Не все зависимости установлены")
+        print("Not all dependencies are installed")
         sys.exit(1)
     
-    # Создание директорий
+    # Create directories
     create_directories()
     
-    # Генерация ключей
+    # Generate keys
     key_gen = KeyGenerator()
     config_gen = ConfigGenerator()
     
-    # Получаем существующие переменные или генерируем новые
+    # Get existing variables or generate new ones
     env_vars = config_gen.get_env_vars()
     
-    # Устанавливаем домен, email и IP сервера
+    # Set domain, email, and server IP
     env_vars['domain'] = domain
     env_vars['email'] = email
     env_vars['server_ip'] = server_ip
     
-    # Генерируем новые ключи если они не заданы
+    # Generate new keys if they are not set
     if not env_vars['vmess_uuid']:
         env_vars['vmess_uuid'] = key_gen.generate_uuid()
-        print(f"✅ Сгенерирован VMess UUID: {env_vars['vmess_uuid']}")
+        print(f"Generated VMess UUID: {env_vars['vmess_uuid']}")
     
     if not env_vars['vless_uuid']:
         env_vars['vless_uuid'] = key_gen.generate_uuid()
-        print(f"✅ Сгенерирован VLESS UUID: {env_vars['vless_uuid']}")
+        print(f"Generated VLESS UUID: {env_vars['vless_uuid']}")
     
     if not env_vars['trojan_password']:
         env_vars['trojan_password'] = key_gen.generate_trojan_password()
-        print(f"✅ Сгенерирован Trojan пароль: {env_vars['trojan_password']}")
+        print(f"Generated Trojan password: {env_vars['trojan_password']}")
     
-    # Генерируем пути если они не заданы
+    # Generate paths if they are not set
     if not env_vars['vmess_ws_path'] or env_vars['vmess_ws_path'] == '/vmess/ws':
         env_vars['vmess_ws_path'] = key_gen.generate_ws_path('vmess')
-        print(f"✅ Сгенерирован VMess WS путь: {env_vars['vmess_ws_path']}")
+        print(f"Generated VMess WS path: {env_vars['vmess_ws_path']}")
     
     if not env_vars['vless_ws_path'] or env_vars['vless_ws_path'] == '/vless/ws':
         env_vars['vless_ws_path'] = key_gen.generate_ws_path('vless')
-        print(f"✅ Сгенерирован VLESS WS путь: {env_vars['vless_ws_path']}")
+        print(f"Generated VLESS WS path: {env_vars['vless_ws_path']}")
     
     if not env_vars['trojan_ws_path'] or env_vars['trojan_ws_path'] == '/trojan/ws':
         env_vars['trojan_ws_path'] = key_gen.generate_ws_path('trojan')
-        print(f"✅ Сгенерирован Trojan WS путь: {env_vars['trojan_ws_path']}")
+        print(f"Generated Trojan WS path: {env_vars['trojan_ws_path']}")
     
-    # Генерируем gRPC сервисы если они не заданы
+    # Generate gRPC services if they are not set
     used_grpc_paths = set()
     used_grpc_services = set()
     
-    # Учитываем уже существующие значения
+    # Account for already existing values
     if env_vars['vmess_grpc_path'] and env_vars['vmess_grpc_path'] != '/vmess/grpc':
         used_grpc_paths.add(env_vars['vmess_grpc_path'])
     if env_vars['vmess_grpc_service'] and env_vars['vmess_grpc_service'] != 'VmessService':
@@ -101,10 +101,10 @@ def init_project(args: argparse.Namespace) -> None:
         env_vars['vmess_grpc_path'] = key_gen.generate_grpc_path(env_vars['vmess_grpc_service'])
         used_grpc_paths.add(env_vars['vmess_grpc_path'])
         used_grpc_services.add(env_vars['vmess_grpc_service'])
-        print(f"✅ Сгенерирован VMess gRPC сервис: {env_vars['vmess_grpc_service']}")
+        print(f"Generated VMess gRPC service: {env_vars['vmess_grpc_service']}")
     
     if not env_vars['vless_grpc_service'] or env_vars['vless_grpc_service'] == 'VlessService':
-        # Перегенерируем если путь/сервис уже используется
+        # Regenerate if path/service is already in use
         attempts = 0
         while attempts < 10:
             service_name = key_gen.generate_grpc_service_name('vless')
@@ -116,10 +116,10 @@ def init_project(args: argparse.Namespace) -> None:
                 used_grpc_services.add(service_name)
                 break
             attempts += 1
-        print(f"✅ Сгенерирован VLESS gRPC сервис: {env_vars['vless_grpc_service']}")
+        print(f"Generated VLESS gRPC service: {env_vars['vless_grpc_service']}")
     
     if not env_vars['trojan_grpc_service'] or env_vars['trojan_grpc_service'] == 'TrojanService':
-        # Перегенерируем если путь/сервис уже используется
+        # Regenerate if path/service is already in use
         attempts = 0
         while attempts < 10:
             service_name = key_gen.generate_grpc_service_name('trojan')
@@ -131,61 +131,61 @@ def init_project(args: argparse.Namespace) -> None:
                 used_grpc_services.add(service_name)
                 break
             attempts += 1
-        print(f"✅ Сгенерирован Trojan gRPC сервис: {env_vars['trojan_grpc_service']}")
+        print(f"Generated Trojan gRPC service: {env_vars['trojan_grpc_service']}")
     
-    # Генерируем секретный путь если он не задан
+    # Generate secret path if it is not set
     if not env_vars['secret_config_path'] or env_vars['secret_config_path'] == '/secret/configs':
         env_vars['secret_config_path'] = key_gen.generate_secret_path()
-        print(f"✅ Сгенерирован секретный путь: {env_vars['secret_config_path']}")
+        print(f"Generated secret path: {env_vars['secret_config_path']}")
     
-    # Сохранение .env файла
+    # Save .env file
     env_content = config_gen.env.get_template('env_multi.j2').render(**env_vars)
     
     env_path = '/app/workspace/.env' if Path('/app/workspace').exists() else '.env'
     with open(env_path, 'w', encoding='utf-8') as f:
         f.write(env_content)
     
-    print("✅ Файл .env создан/обновлен")
+    print("File .env created/updated")
     
-    # Перезагружаем переменные окружения в существующем ConfigGenerator
+    # Reload environment variables in existing ConfigGenerator
     config_gen.reload_env_vars()
     
-    # Генерация всех конфигураций
+    # Generate all configurations
     config_gen.generate_all_configs()
-    print("✅ Все конфигурации сгенерированы")
+    print("All configurations generated")
     
-    print("\n🎉 Инициализация завершена!")
-    print(f"\n📋 Проект готов для домена: {domain}")
-    print("\n🚀 Для запуска выполните:")
+    print("\nInitialization complete!")
+    print(f"\nProject ready for domain: {domain}")
+    print("\nTo start, run:")
     print("   docker-compose up -d")
 
 
 def generate_configs(args: argparse.Namespace) -> None:
-    """Генерация конфигураций"""
+    """Generate configurations"""
     
-    print("🔧 Генерация конфигураций...")
+    print("Generating configurations...")
     
     config_gen = ConfigGenerator()
-    # Перезагружаем переменные окружения для использования актуальных значений
+    # Reload environment variables to use current values
     config_gen.reload_env_vars()
     config_gen.generate_all_configs()
     
-    print("✅ Конфигурации сгенерированы в папке config/")
+    print("Configurations generated in config/ folder")
 
 
 def generate_client_config(args: argparse.Namespace) -> None:
-    """Генерация клиентской конфигурации"""
+    """Generate client configuration"""
     
     config_gen = ConfigGenerator()
     
     try:
-        # Генерация JSON конфигурации
+        # Generate JSON configuration
         client_config = config_gen.generate_client_config(
             protocol=args.protocol,
             transport=args.transport
         )
         
-        # Сохранение в файл
+        # Save to file
         config_dir = Path('config/client')
         config_dir.mkdir(parents=True, exist_ok=True)
         
@@ -195,9 +195,9 @@ def generate_client_config(args: argparse.Namespace) -> None:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(client_config)
         
-        print(f"✅ Клиентская конфигурация сохранена: {filepath}")
+        print(f"Client configuration saved: {filepath}")
         
-        # Генерация URL для мобильных приложений
+        # Generate URL for mobile applications
         if args.url:
             try:
                 if args.protocol == 'vless':
@@ -207,33 +207,33 @@ def generate_client_config(args: argparse.Namespace) -> None:
                 elif args.protocol == 'trojan':
                     url = config_gen.generate_trojan_url(transport=args.transport)
                 else:
-                    raise ValueError(f"URL генерация не поддерживается для протокола {args.protocol}")
+                    raise ValueError(f"URL generation is not supported for protocol {args.protocol}")
                 
-                print(f"\n📱 URL для мобильного приложения:")
+                print(f"\nURL for mobile application:")
                 print(url)
                 
-                # Сохранение URL в файл
+                # Save URL to file
                 url_file = config_dir / f'{args.protocol}_{args.transport}_url.txt'
                 with open(url_file, 'w', encoding='utf-8') as f:
                     f.write(url)
                 
-                print(f"✅ URL сохранен в файл: {url_file}")
+                print(f"URL saved to file: {url_file}")
                 
             except Exception as e:
-                print(f"⚠️  Ошибка генерации URL: {e}")
+                print(f"Error generating URL: {e}")
         
     except Exception as e:
-        print(f"❌ Ошибка генерации клиентской конфигурации: {e}")
+        print(f"Error generating client configuration: {e}")
         sys.exit(1)
 
 
 def show_status(args: argparse.Namespace) -> None:
-    """Показать статус сервера"""
+    """Show server status"""
     
-    print("📊 Статус Xray VPN Server")
+    print("Xray VPN Server Status")
     print("=" * 50)
     
-    # Проверка файлов конфигурации
+    # Check configuration files
     config_files = [
         'config/xray/config.json',
         'config/nginx/nginx.conf',
@@ -241,43 +241,43 @@ def show_status(args: argparse.Namespace) -> None:
         '.env'
     ]
     
-    print("\n📁 Файлы конфигурации:")
+    print("\nConfiguration files:")
     for file_path in config_files:
         if Path(file_path).exists():
-            print(f"  ✅ {file_path}")
+            print(f"  {file_path}")
         else:
-            print(f"  ❌ {file_path}")
+            print(f"  {file_path} (missing)")
     
-    # Проверка клиентских конфигураций
+    # Check client configurations
     client_dir = Path('config/client')
     if client_dir.exists():
         client_configs = list(client_dir.glob('*.json'))
-        print(f"\n👥 Клиентские конфигурации ({len(client_configs)}):")
+        print(f"\nClient configurations ({len(client_configs)}):")
         for config_file in client_configs:
-            print(f"  ✅ {config_file.name}")
+            print(f"  {config_file.name}")
     else:
-        print("\n👥 Клиентские конфигурации: не найдены")
+        print("\nClient configurations: not found")
     
-    # Проверка переменных окружения
+    # Check environment variables
     config_gen = ConfigGenerator()
     env_vars = config_gen.get_env_vars()
     
-    print("\n🔧 Основные настройки:")
-    print(f"  Домен: {env_vars['domain']}")
-    print(f"  IP сервера: {env_vars['server_ip']}")
+    print("\nMain settings:")
+    print(f"  Domain: {env_vars['domain']}")
+    print(f"  Server IP: {env_vars['server_ip']}")
     print(f"  Email: {env_vars['email']}")
-    print(f"  Уровень логирования: {env_vars['log_level']}")
+    print(f"  Logging level: {env_vars['log_level']}")
     
-    print("\n🔑 Протоколы:")
+    print("\nProtocols:")
     print(f"  VMess UUID: {env_vars['vmess_uuid'][:8]}...")
     print(f"  VLESS UUID: {env_vars['vless_uuid'][:8]}...")
-    print(f"  Trojan пароль: {env_vars['trojan_password'][:8]}...")
+    print(f"  Trojan password: {env_vars['trojan_password'][:8]}...")
 
 
 def show_ssl_status(args: argparse.Namespace) -> None:
-    """Показать статус SSL сертификатов"""
+    """Show SSL certificate status"""
     
-    print("🔒 Статус SSL сертификатов")
+    print("SSL Certificate Status")
     print("=" * 50)
     
     config_gen = ConfigGenerator()
@@ -289,15 +289,15 @@ def show_ssl_status(args: argparse.Namespace) -> None:
     if ssl_dir.exists():
         cert_files = ['fullchain.pem', 'privkey.pem', 'cert.pem', 'chain.pem']
         
-        print(f"\n📁 Сертификаты для домена {domain}:")
+        print(f"\nCertificates for domain {domain}:")
         for cert_file in cert_files:
             cert_path = ssl_dir / cert_file
             if cert_path.exists():
-                print(f"  ✅ {cert_file}")
+                print(f"  {cert_file}")
             else:
-                print(f"  ❌ {cert_file}")
+                print(f"  {cert_file} (missing)")
         
-        # Проверка срока действия сертификата
+        # Check certificate expiration date
         cert_path = ssl_dir / 'cert.pem'
         if cert_path.exists():
             try:
@@ -307,57 +307,57 @@ def show_ssl_status(args: argparse.Namespace) -> None:
                 ], capture_output=True, text=True)
                 
                 if result.returncode == 0:
-                    print(f"\n📅 Информация о сертификате:")
+                    print(f"\nCertificate Information:")
                     for line in result.stdout.strip().split('\n'):
                         print(f"  {line}")
                 
             except Exception as e:
-                print(f"⚠️  Не удалось проверить срок действия сертификата: {e}")
+                print(f"Could not check certificate expiration date: {e}")
     else:
-        print(f"\n❌ Сертификаты для домена {domain} не найдены")
-        print("\n💡 Для получения сертификата выполните:")
+        print(f"\nCertificates for domain {domain} not found")
+        print("\nTo obtain a certificate, run:")
         print(f"docker-compose --profile tools run --rm certbot certonly --webroot -w /var/www/html -d {domain}")
 
 
 def main():
-    """Главная функция"""
+    """Main function"""
     
     parser = argparse.ArgumentParser(
-        description='Xray VPN Server - Генератор конфигураций',
+        description='Xray VPN Server - Configuration Generator',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Примеры использования:
-  python -m src.main init                           # Инициализация проекта
-  python -m src.main generate                       # Генерация всех конфигураций
-  python -m src.main generate-client vless ws       # Генерация клиентской конфигурации VLESS WebSocket
-  python -m src.main generate-client vmess grpc -u  # Генерация VMess gRPC с URL
-  python -m src.main status                         # Показать статус
-  python -m src.main ssl-status                     # Показать статус SSL
+Usage examples:
+  python -m src.main init                           # Initialize project
+  python -m src.main generate                       # Generate all configurations
+  python -m src.main generate-client vless ws       # Generate VLESS WebSocket client configuration
+  python -m src.main generate-client vmess grpc -u  # Generate VMess gRPC with URL
+  python -m src.main status                         # Show status
+  python -m src.main ssl-status                     # Show SSL status
         """
     )
     
-    subparsers = parser.add_subparsers(dest='command', help='Доступные команды')
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # Команда init
-    init_parser = subparsers.add_parser('init', help='Инициализация проекта')
-    init_parser.add_argument('--domain', required=True, help='Домен сервера (например: vpn.example.com)')
-    init_parser.add_argument('--email', help='Email для Let\'s Encrypt (по умолчанию: admin@домен)')
-    init_parser.add_argument('--server-ip', '-i', required=True, help='IP адрес сервера')
+    # Init command
+    init_parser = subparsers.add_parser('init', help='Initialize project')
+    init_parser.add_argument('--domain', required=True, help='Server domain (e.g.: vpn.example.com)')
+    init_parser.add_argument('--email', help='Email for Let\'s Encrypt (default: admin@domain)')
+    init_parser.add_argument('--server-ip', '-i', required=True, help='Server IP address')
     
-    # Команда generate
-    generate_parser = subparsers.add_parser('generate', help='Генерация всех конфигураций')
+    # Generate command
+    generate_parser = subparsers.add_parser('generate', help='Generate all configurations')
     
-    # Команда generate-client
-    client_parser = subparsers.add_parser('generate-client', help='Генерация клиентской конфигурации')
-    client_parser.add_argument('protocol', choices=['vmess', 'vless', 'trojan'], help='Протокол')
-    client_parser.add_argument('transport', choices=['ws', 'grpc'], help='Транспорт')
-    client_parser.add_argument('-u', '--url', action='store_true', help='Генерировать URL для мобильных приложений')
+    # Generate-client command
+    client_parser = subparsers.add_parser('generate-client', help='Generate client configuration')
+    client_parser.add_argument('protocol', choices=['vmess', 'vless', 'trojan'], help='Protocol')
+    client_parser.add_argument('transport', choices=['ws', 'grpc'], help='Transport')
+    client_parser.add_argument('-u', '--url', action='store_true', help='Generate URL for mobile applications')
     
-    # Команда status
-    status_parser = subparsers.add_parser('status', help='Показать статус сервера')
+    # Status command
+    status_parser = subparsers.add_parser('status', help='Show server status')
     
-    # Команда ssl-status
-    ssl_parser = subparsers.add_parser('ssl-status', help='Показать статус SSL сертификатов')
+    # Ssl-status command
+    ssl_parser = subparsers.add_parser('ssl-status', help='Show SSL certificate status')
     
     args = parser.parse_args()
     
@@ -365,10 +365,10 @@ def main():
         parser.print_help()
         return
     
-    # Настройка логирования
+    # Configure logging
     setup_logging()
     
-    # Выполнение команд
+    # Execute commands
     if args.command == 'init':
         init_project(args)
     elif args.command == 'generate':
@@ -382,4 +382,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main() 
+    main()

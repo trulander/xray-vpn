@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ domain }} - Добро пожаловать</title>
-    <meta name="description" content="Официальный сайт {{ domain }}">
+    <title>{{ domain }} - Welcome</title>
+    <meta name="description" content="Official website of {{ domain }}">
     <meta name="robots" content="index, follow">
     
     <style>
@@ -144,7 +144,7 @@
             }
             
             .hero h1 {
-                font-size: 2rem;
+                font-size: 2em;
             }
             
             .features {
@@ -158,54 +158,54 @@
         <nav class="container">
             <div class="logo">{{ domain }}</div>
             <ul class="nav-links">
-                <li><a href="#home">Главная</a></li>
-                <li><a href="#about">О нас</a></li>
-                <li><a href="#services">Услуги</a></li>
-                <li><a href="#contact">Контакты</a></li>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
             </ul>
         </nav>
     </header>
 
     <main class="container">
         <section class="hero" id="home">
-            <h1>Добро пожаловать на {{ domain }}</h1>
-            <p>Современные решения для вашего бизнеса</p>
-            <a href="#services" class="btn">Узнать больше</a>
+            <h1>Welcome to {{ domain }}</h1>
+            <p>Modern solutions for your business</p>
+            <a href="#services" class="btn">Learn More</a>
         </section>
 
         <section class="features" id="services">
             <div class="feature">
-                <h3>Высокая производительность</h3>
-                <p>Наши решения обеспечивают максимальную скорость и надежность для ваших проектов.</p>
+                <h3>High Performance</h3>
+                <p>Our solutions provide maximum speed and reliability for your projects.</p>
             </div>
             <div class="feature">
-                <h3>Безопасность</h3>
-                <p>Используем современные технологии шифрования и защиты данных.</p>
+                <h3>Security</h3>
+                <p>We use modern encryption and data protection technologies.</p>
             </div>
             <div class="feature">
-                <h3>Поддержка 24/7</h3>
-                <p>Наша команда готова помочь вам в любое время дня и ночи.</p>
+                <h3>24/7 Support</h3>
+                <p>Our team is ready to assist you any time of day or night.</p>
             </div>
         </section>
 
         <section id="about">
             <div class="feature">
-                <h3>О компании</h3>
-                <p>Мы предоставляем качественные IT-услуги и решения для бизнеса любого масштаба. 
-                   Наш опыт и профессионализм помогают клиентам достигать поставленных целей.</p>
+                <h3>About Company</h3>
+                <p>We provide high-quality IT services and solutions for businesses of all sizes. 
+                   Our experience and professionalism help clients achieve their goals.</p>
             </div>
         </section>
     </main>
 
     <footer id="contact">
         <div class="container">
-            <p>&copy; 2024 {{ domain }}. Все права защищены.</p>
-            <p>Свяжитесь с нами: <a href="mailto:{{ email }}" style="color: #fff;">{{ email }}</a></p>
+            <p>&copy; 2024 {{ domain }}. All rights reserved.</p>
+            <p>Contact us: <a href="mailto:{{ email }}" style="color: #fff;">{{ email }}</a></p>
         </div>
     </footer>
 
     <script>
-        // Плавная прокрутка для якорных ссылок
+        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -219,7 +219,7 @@
             });
         });
 
-        // Эффект параллакса для фона
+        // Parallax effect for background
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
             const parallax = document.querySelector('body');
@@ -228,4 +228,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

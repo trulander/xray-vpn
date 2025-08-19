@@ -5,10 +5,10 @@ server {
     root /usr/share/nginx/html;
     index index.html index.htm;
     
-    # Основные настройки
+    # Main settings
     server_tokens off;
     
-    # Gzip сжатие
+    # Gzip compression
     gzip on;
     gzip_vary on;
     gzip_comp_level 6;
@@ -23,23 +23,23 @@ server {
         application/atom+xml
         image/svg+xml;
     
-    # Обработка статических файлов
+    # Static file handling
     location / {
         try_files $uri $uri/ =404;
         
-        # Кэширование статических файлов
+        # Cache static files
         location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
             expires 1y;
             add_header Cache-Control "public, immutable";
         }
     }
     
-    # Безопасность
+    # Security
     location ~ /\. {
         deny all;
     }
     
-    # Логирование
+    # Logging
     access_log /var/log/nginx/demo_access.log;
     error_log /var/log/nginx/demo_error.log;
-} 
+}

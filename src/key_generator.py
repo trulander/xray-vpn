@@ -1,5 +1,5 @@
 """
-Генератор ключей для Xray VPN сервера
+Key generator for Xray VPN server
 """
 
 import uuid
@@ -12,22 +12,22 @@ from typing import Tuple
 
 
 class KeyGenerator:
-    """Генератор ключей и идентификаторов для Xray"""
+    """Key and ID generator for Xray"""
     
     def generate_uuid(self) -> str:
-        """Генерация UUID для клиента"""
+        """Generate UUID for client"""
         return str(uuid.uuid4())
     
     def generate_x25519_keys(self) -> Tuple[str, str]:
-        """Генерация пары ключей X25519 для REALITY"""
+        """Generate X25519 key pair for REALITY"""
         
-        # Генерация приватного ключа
+        # Generate private key
         private_key = x25519.X25519PrivateKey.generate()
         
-        # Получение публичного ключа
+        # Get public key
         public_key = private_key.public_key()
         
-        # Сериализация в base64
+        # Serialize to base64
         private_key_bytes = private_key.private_bytes(
             encoding=serialization.Encoding.Raw,
             format=serialization.PrivateFormat.Raw,
@@ -39,30 +39,30 @@ class KeyGenerator:
             format=serialization.PublicFormat.Raw
         )
         
-        # Используем base64.urlsafe_b64encode без padding для REALITY
+        # Use base64.urlsafe_b64encode without padding for REALITY
         private_key_b64 = base64.urlsafe_b64encode(private_key_bytes).decode('ascii').rstrip('=')
         public_key_b64 = base64.urlsafe_b64encode(public_key_bytes).decode('ascii').rstrip('=')
         
         return private_key_b64, public_key_b64
     
     def generate_short_id(self, length: int = 8) -> str:
-        """Генерация короткого ID для REALITY"""
+        """Generate short ID for REALITY"""
         
-        # Генерируем случайные байты
+        # Generate random bytes
         random_bytes = secrets.token_bytes(length // 2)
         
-        # Конвертируем в hex строку
+        # Convert to hex string
         return random_bytes.hex()
     
     def generate_trojan_password(self, length: int = 32) -> str:
-        """Генерация пароля для Trojan"""
+        """Generate password for Trojan"""
         
-        # Используем буквы и цифры для пароля
+        # Use letters and digits for the password
         alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for _ in range(length))
     
     def generate_ws_path(self, protocol: str = 'generic') -> str:
-        """Генерация случайного пути для WebSocket"""
+        """Generate random path for WebSocket"""
         
         protocol_paths = {
             'vmess': [
@@ -102,7 +102,7 @@ class KeyGenerator:
         return secrets.choice(paths)
     
     def generate_grpc_service_name(self, protocol: str = 'generic') -> str:
-        """Генерация имени сервиса для gRPC"""
+        """Generate service name for gRPC"""
         
         protocol_services = {
             'vmess': [
@@ -139,18 +139,18 @@ class KeyGenerator:
         return secrets.choice(services)
     
     def generate_grpc_path(self, service_name: str) -> str:
-        """Генерация пути для gRPC на основе имени сервиса"""
+        """Generate gRPC path based on service name"""
         
-        # Преобразуем имя сервиса в путь
+        # Convert service name to path
         path_name = service_name.replace('Service', '').lower()
         return f'/{path_name}/grpc'
     
     def generate_path(self) -> str:
-        """Генерация случайного пути для WebSocket (обратная совместимость)"""
+        """Generate random path for WebSocket (backward compatibility)"""
         return self.generate_ws_path('generic')
     
     def generate_spider_x(self) -> str:
-        """Генерация spider X параметра для REALITY"""
+        """Generate spider X parameter for REALITY"""
         
         paths = [
             '/',
@@ -180,13 +180,13 @@ class KeyGenerator:
         return f"{path}{param}"
     
     def generate_secret_path(self) -> str:
-        """Генерация секретного пути для страницы конфигураций"""
+        """Generate secret path for configuration page"""
         
-        # Генерируем случайный 16-символьный путь
+        # Generate a random 16-character path
         alphabet = string.ascii_lowercase + string.digits
         random_part = ''.join(secrets.choice(alphabet) for _ in range(16))
         
-        # Случайные префиксы для маскировки
+        # Random prefixes for masquerading
         prefixes = [
             '/admin',
             '/panel', 
@@ -201,4 +201,4 @@ class KeyGenerator:
         ]
         
         prefix = secrets.choice(prefixes)
-        return f"{prefix}/{random_part}" 
+        return f"{prefix}/{random_part}"

@@ -1,9 +1,9 @@
-# Логи
+# Logs
 logs/
 data/xray/logs/
 *.log
 
-# Конфигурации
+# Configurations
 config/
 data/ssl/
 data/www/

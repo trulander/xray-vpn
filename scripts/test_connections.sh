@@ -1,58 +1,58 @@
 #!/bin/bash
 
-echo "🧪 Тестирование Xray VPN Server (мульти-протокольная архитектура)"
+echo "Testing Xray VPN Server (multi-protocol architecture)"
 echo "================================================================="
 
-# Загружаем переменные окружения
+# Load environment variables
 if [ -f .env ]; then
     source .env
-    echo "📋 Конфигурация:"
-    echo "   Домен: ${DOMAIN:-не задан}"
-    echo "   Email: ${EMAIL:-не задан}"
+    echo "Configuration:"
+    echo "   Domain: ${DOMAIN:-not set}"
+    echo "   Email: ${EMAIL:-not set}"
 else
-    echo "❌ .env файл не найден"
+    echo ".env file not found"
     exit 1
 fi
 echo
 
-# Проверка основного сайта
-echo "1. 🌐 Проверка основного сайта:"
-echo "HTTP (должен быть редирект на HTTPS):"
-curl -s -I "http://localhost" 2>/dev/null | head -3 || curl -s -I "http://${DOMAIN}" 2>/dev/null | head -3 || echo "❌ HTTP недоступен"
+# Check main website
+echo "1. Checking main website:"
+echo "HTTP (should redirect to HTTPS):"
+curl -s -I "http://localhost" 2>/dev/null | head -3 || curl -s -I "http://${DOMAIN}" 2>/dev/null | head -3 || echo "HTTP unavailable"
 
-echo "HTTPS (должен показывать демо сайт):"
-curl -s -I "https://localhost" 2>/dev/null | head -3 || curl -s -I "https://${DOMAIN}" 2>/dev/null | head -3 || echo "❌ HTTPS недоступен"
+echo "HTTPS (should show demo site):"
+curl -s -I "https://localhost" 2>/dev/null | head -3 || curl -s -I "https://${DOMAIN}" 2>/dev/null | head -3 || echo "HTTPS unavailable"
 echo
 
-# Проверка VPN путей (должны возвращать ошибки для обычных HTTP запросов)
-echo "2. 🔒 Проверка VPN путей (случайные пути из конфигурации):"
+# Check VPN paths (should return errors for regular HTTP requests)
+echo "2. Checking VPN paths (random paths from configuration):"
 
-# Читаем конфигурацию если доступна
+# Read configuration if available
 if [ -f "config/nginx/${DOMAIN}_location" ]; then
-    echo "📄 Анализ кастомных location блоков:"
+    echo "Analyzing custom location blocks:"
     
-    # Извлекаем пути из конфигурации
+    # Extract paths from configuration
     WS_PATHS=$(grep -o "location [^{]*" "config/nginx/${DOMAIN}_location" | grep -v grpc | cut -d' ' -f2)
     GRPC_PATHS=$(grep -o "location [^{]*" "config/nginx/${DOMAIN}_location" | grep grpc | cut -d' ' -f2)
     
-    echo "WebSocket пути:"
+    echo "WebSocket paths:"
     for path in $WS_PATHS; do
         if [[ "$path" != *"grpc"* ]]; then
             echo "  Testing $path:"
-            curl -s -I "https://localhost$path" 2>/dev/null | head -1 || curl -s -I "https://${DOMAIN}$path" 2>/dev/null | head -1 || echo "    ❌ Путь недоступен"
+            curl -s -I "https://localhost$path" 2>/dev/null | head -1 || curl -s -I "https://${DOMAIN}$path" 2>/dev/null | head -1 || echo "    Path unavailable"
         fi
     done
     
-    echo "gRPC пути:"
+    echo "gRPC paths:"
     for path in $GRPC_PATHS; do
         echo "  Testing $path:"
-        curl -s -I "https://localhost$path" 2>/dev/null | head -1 || curl -s -I "https://${DOMAIN}$path" 2>/dev/null | head -1 || echo "    ❌ Путь недоступен"
+        curl -s -I "https://localhost$path" 2>/dev/null | head -1 || curl -s -I "https://${DOMAIN}$path" 2>/dev/null | head -1 || echo "    Path unavailable"
     done
 else
-    echo "❌ Файл конфигурации nginx не найден: config/nginx/${DOMAIN}_location"
-    echo "   Тестируем стандартные пути для демонстрации:"
+    echo "Nginx configuration file not found: config/nginx/${DOMAIN}_location"
+    echo "   Testing standard paths for demonstration:"
     
-    # Примеры стандартных путей
+    # Examples of standard paths
     TEST_PATHS=(
         "/api/v1/vmess"
         "/ws/vless" 
@@ -64,94 +64,94 @@ else
     
     for path in "${TEST_PATHS[@]}"; do
         echo "  Testing $path:"
-        curl -s -I "https://localhost$path" 2>/dev/null | head -1 || echo "    ❌ Путь недоступен"
+        curl -s -I "https://localhost$path" 2>/dev/null | head -1 || echo "    Path unavailable"
     done
 fi
 echo
 
-# Проверка статуса Docker контейнеров
-echo "3. 🐳 Статус Docker контейнеров:"
+# Check Docker container status
+echo "3. Docker container status:"
 docker-compose ps
 echo
 
-# Проверка внутренних портов Xray сервера
-echo "4. 🔌 Проверка внутренних портов Xray сервера:"
+# Check Xray server internal ports
+echo "4. Checking Xray server internal ports:"
 if docker-compose ps | grep -q "xray-server.*Up"; then
-    echo "Порты WebSocket:"
-    docker-compose exec nginx-proxy nc -z xray-server 10001 && echo "  ✅ VMess WS: 10001" || echo "  ❌ VMess WS: 10001"
-    docker-compose exec nginx-proxy nc -z xray-server 10002 && echo "  ✅ VLESS WS: 10002" || echo "  ❌ VLESS WS: 10002"
-    docker-compose exec nginx-proxy nc -z xray-server 10003 && echo "  ✅ Trojan WS: 10003" || echo "  ❌ Trojan WS: 10003"
+    echo "WebSocket ports:"
+    docker-compose exec nginx-proxy nc -z xray-server 10001 && echo "  VMess WS: 10001" || echo "  VMess WS: 10001 (unavailable)"
+    docker-compose exec nginx-proxy nc -z xray-server 10002 && echo "  VLESS WS: 10002" || echo "  VLESS WS: 10002 (unavailable)"
+    docker-compose exec nginx-proxy nc -z xray-server 10003 && echo "  Trojan WS: 10003" || echo "  Trojan WS: 10003 (unavailable)"
     
-    echo "Порты gRPC:"
-    docker-compose exec nginx-proxy nc -z xray-server 10011 && echo "  ✅ VMess gRPC: 10011" || echo "  ❌ VMess gRPC: 10011"
-    docker-compose exec nginx-proxy nc -z xray-server 10012 && echo "  ✅ VLESS gRPC: 10012" || echo "  ❌ VLESS gRPC: 10012"
-    docker-compose exec nginx-proxy nc -z xray-server 10013 && echo "  ✅ Trojan gRPC: 10013" || echo "  ❌ Trojan gRPC: 10013"
+    echo "gRPC ports:"
+    docker-compose exec nginx-proxy nc -z xray-server 10011 && echo "  VMess gRPC: 10011" || echo "  VMess gRPC: 10011 (unavailable)"
+    docker-compose exec nginx-proxy nc -z xray-server 10012 && echo "  VLESS gRPC: 10012" || echo "  VLESS gRPC: 10012 (unavailable)"
+    docker-compose exec nginx-proxy nc -z xray-server 10013 && echo "  Trojan gRPC: 10013" || echo "  Trojan gRPC: 10013 (unavailable)"
 else
-    echo "❌ Xray сервер не запущен"
+    echo "Xray server is not running"
 fi
 echo
 
-# Проверка переменных окружения для автоматического SSL
-echo "5. 🔐 Проверка настроек автоматического SSL:"
-docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)" || echo "❌ Переменные окружения не найдены"
+# Check environment variables for automatic SSL
+echo "5. Checking automatic SSL settings:"
+docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)" || echo "Environment variables not found"
 echo
 
-# Проверка сертификатов
-echo "6. 📜 SSL сертификаты:"
+# Check certificates
+echo "6. SSL certificates:"
 if [ -d "data/ssl" ]; then
     cert_count=$(find data/ssl -name "*.crt" -o -name "*.pem" | wc -l)
-    echo "✅ Найдено $cert_count файлов сертификатов в data/ssl/"
+    echo "Found $cert_count certificate files in data/ssl/"
     
     if [ -f "data/ssl/${DOMAIN}.crt" ]; then
-        echo "✅ Сертификат nginx-proxy для ${DOMAIN} найден"
+        echo "nginx-proxy certificate for ${DOMAIN} found"
     elif [ -d "data/ssl/live/${DOMAIN}" ]; then
-        echo "✅ Сертификат Let's Encrypt для ${DOMAIN} найден"
+        echo "Let's Encrypt certificate for ${DOMAIN} found"
     else
-        echo "⚠️  Сертификат для ${DOMAIN} не найден (может получаться автоматически)"
+        echo "Certificate for ${DOMAIN} not found (may be obtained automatically)"
     fi
 else
-    echo "❌ Папка data/ssl не существует"
+    echo "data/ssl folder does not exist"
 fi
 echo
 
-# Проверка логов (только ошибки)
-echo "7. 📋 Проверка логов на ошибки:"
-echo "nginx-proxy ошибки:"
-docker-compose logs nginx-proxy 2>/dev/null | grep -i error | tail -3 || echo "  ✅ Ошибок не найдено"
+# Check logs (errors only)
+echo "7. Checking logs for errors:"
+echo "nginx-proxy errors:"
+docker-compose logs nginx-proxy 2>/dev/null | grep -i error | tail -3 || echo "  No errors found"
 
-echo "acme-companion ошибки:"
-docker-compose logs acme-companion 2>/dev/null | grep -i error | tail -3 || echo "  ✅ Ошибок не найдено"
+echo "acme-companion errors:"
+docker-compose logs acme-companion 2>/dev/null | grep -i error | tail -3 || echo "  No errors found"
 
-echo "xray-server ошибки:"
-docker-compose logs xray-server 2>/dev/null | grep -i error | tail -3 || echo "  ✅ Ошибок не найдено"
+echo "xray-server errors:"
+docker-compose logs xray-server 2>/dev/null | grep -i error | tail -3 || echo "  No errors found"
 echo
 
-echo "🎉 Тестирование завершено!"
+echo "Testing complete!"
 echo
 
-# Информация о секретной странице
+# Secret page information
 if [ -n "$SECRET_CONFIG_PATH" ]; then
-    echo "🔐 Секретная страница конфигураций:"
+    echo "Secret configurations page:"
     echo "   https://${DOMAIN}${SECRET_CONFIG_PATH}"
-    echo "   ⚠️  Эта ссылка содержит ваши персональные конфигурации VPN!"
+    echo "   This link contains your personal VPN configurations!"
     echo
 fi
 
-echo "📁 Клиентские конфигурации доступны в:"
+echo "Client configurations available in:"
 if [ -d "config/client" ]; then
     ls -1 config/client/*.json 2>/dev/null | while read file; do
-        echo "  📄 $file"
+        echo "  $file"
     done
 else
-    echo "  ❌ Папка config/client не найдена"
-    echo "  💡 Выполните: docker-compose --profile tools run --rm config-generator generate"
+    echo "  config/client folder not found"
+    echo "  Run: docker-compose --profile tools run --rm config-generator generate"
 fi
 echo
-echo "🔧 Управление:"
-echo "  - Статус: docker-compose ps"
-echo "  - Логи: docker-compose logs nginx-proxy acme-companion xray-server"
-echo "  - Диагностика: ./scripts/diagnose-ssl.sh"
-echo "  - Перезапуск: docker-compose restart"
+echo "Management:"
+echo "  - Status: docker-compose ps"
+echo "  - Logs: docker-compose logs nginx-proxy acme-companion xray-server"
+echo "  - Diagnostics: ./scripts/diagnose-ssl.sh"
+echo "  - Restart: docker-compose restart"
 echo
-echo "📱 Для генерации URL мобильных приложений:"
-echo "  docker-compose --profile tools run --rm config-generator generate-client vless ws -u" 
+echo "To generate URL for mobile applications:"
+echo "  docker-compose --profile tools run --rm config-generator generate-client vless ws -u"

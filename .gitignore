@@ -1,4 +1,4 @@
-# Личные данные и сгенерированные конфигурации
+# Personal data and generated configurations
 .env
 config/
 data/
@@ -48,4 +48,4 @@ Thumbs.db
 
 # Logs
 *.log
-logs/ 
+logs/

@@ -1,5 +1,5 @@
 """
-Генератор конфигураций для Xray и Nginx (мульти-протокольная архитектура с nginx-proxy)
+Configuration generator for Xray and Nginx (multi-protocol architecture with nginx-proxy)
 """
 
 import urllib.parse
@@ -13,76 +13,76 @@ from key_generator import KeyGenerator
 
 
 class ConfigGenerator:
-    """Генератор конфигураций для VPN сервера с nginx-proxy архитектурой"""
+    """Configuration generator for VPN server with nginx-proxy architecture"""
     
     def __init__(self):
-        # Сначала пытаемся загрузить .env файл (если существует)
+        # First, try to load the .env file (if it exists)
         env_path = '/app/workspace/.env' if Path('/app/workspace/.env').exists() else '.env'
         if Path(env_path).exists():
             load_dotenv(env_path)
         
         self.key_gen = KeyGenerator()
         
-        # Определяем путь к шаблонам (всегда в контейнере /app/workspace/templates)
-        templates_path = '/app/workspace/templates' if Path('/app/workspace/templates').exists() else 'templates'
+        # Define the path to templates (always in the container /app/workspace/templates)
+        templates_path = '/app/workspace/templates' if Path('/app/workspace/.env').exists() else 'templates'
         self.env = Environment(loader=FileSystemLoader(templates_path))
     
     def reload_env_vars(self):
-        """Принудительная перезагрузка переменных окружения из .env файла"""
+        """Force reload environment variables from .env file"""
         env_path = '/app/workspace/.env' if Path('/app/workspace/.env').exists() else '.env'
         if Path(env_path).exists():
             load_dotenv(env_path, override=True)
     
     def get_env_vars(self) -> Dict[str, Any]:
-        """Получение переменных окружения"""
+        """Get environment variables"""
         return {
-            # Основные настройки
+            # Main settings
             'domain': os.getenv('DOMAIN', 'example.com'),
             'server_ip': os.getenv('SERVER_IP', 'YOUR_SERVER_IP'),
             'email': os.getenv('EMAIL', 'admin@example.com'),
             
-            # UUID для протоколов
+            # UUID for protocols
             'vmess_uuid': os.getenv('VMESS_UUID') or '',
             'vless_uuid': os.getenv('VLESS_UUID') or '',
             
-            # Пароль для Trojan
+            # Password for Trojan
             'trojan_password': os.getenv('TROJAN_PASSWORD') or '',
             
-            # Пути для WebSocket
+            # Paths for WebSocket
             'vmess_ws_path': os.getenv('VMESS_WS_PATH') or '/vmess/ws',
             'vless_ws_path': os.getenv('VLESS_WS_PATH') or '/vless/ws',
             'trojan_ws_path': os.getenv('TROJAN_WS_PATH') or '/trojan/ws',
             
-            # Пути для gRPC
+            # Paths for gRPC
             'vmess_grpc_path': os.getenv('VMESS_GRPC_PATH') or '/vmess/grpc',
             'vless_grpc_path': os.getenv('VLESS_GRPC_PATH') or '/vless/grpc',
             'trojan_grpc_path': os.getenv('TROJAN_GRPC_PATH') or '/trojan/grpc',
             
-            # Сервисы для gRPC
+            # Services for gRPC
             'vmess_grpc_service': os.getenv('VMESS_GRPC_SERVICE') or 'VmessService',
             'vless_grpc_service': os.getenv('VLESS_GRPC_SERVICE') or 'VlessService',
             'trojan_grpc_service': os.getenv('TROJAN_GRPC_SERVICE') or 'TrojanService',
             
-            # Секретная страница конфигураций
+            # Secret configuration page
             'secret_config_path': os.getenv('SECRET_CONFIG_PATH') or '/secret/configs',
             
-            # Настройки логирования
+            # Logging settings
             'log_level': os.getenv('LOG_LEVEL', 'warning'),
             'enable_stats': os.getenv('ENABLE_STATS', 'false').lower() == 'true',
             
-            # Docker настройки
+            # Docker settings
             'uid': os.getenv('UID', '1000'),
             'gid': os.getenv('GID', '1000')
         }
     
     def generate_xray_server_config(self) -> str:
-        """Генерация серверной конфигурации Xray с множественными протоколами"""
+        """Generate Xray server configuration with multiple protocols"""
         vars = self.get_env_vars()
         template = self.env.get_template('xray_server_multi.json.j2')
         return template.render(**vars)
     
     def generate_client_config(self, protocol: str = 'vless', transport: str = 'ws') -> str:
-        """Генерация клиентской конфигурации для указанного протокола и транспорта"""
+        """Generate client configuration for the specified protocol and transport"""
         vars = self.get_env_vars()
         
         template_name = f'client_{protocol}_{transport}.json.j2'
@@ -91,10 +91,10 @@ class ConfigGenerator:
             template = self.env.get_template(template_name)
             return template.render(**vars)
         except Exception as e:
-            raise ValueError(f"Неподдерживаемая комбинация протокола {protocol} и транспорта {transport}: {e}")
+            raise ValueError(f"Unsupported protocol {protocol} and transport {transport} combination: {e}")
     
     def generate_all_client_configs(self) -> Dict[str, str]:
-        """Генерация всех клиентских конфигураций"""
+        """Generate all client configurations"""
         configs = {}
         
         protocols = ['vmess', 'vless', 'trojan']
@@ -106,13 +106,13 @@ class ConfigGenerator:
                     config_name = f'{protocol}_{transport}'
                     configs[config_name] = self.generate_client_config(protocol=protocol, transport=transport)
                 except ValueError:
-                    # Пропускаем неподдерживаемые комбинации
+                    # Skip unsupported combinations
                     continue
         
         return configs
     
     def generate_vless_url(self, transport: str = 'ws') -> str:
-        """Генерация VLESS URL для мобильных приложений"""
+        """Generate VLESS URL for mobile applications"""
         vars = self.get_env_vars()
         
         if transport == 'ws':
@@ -133,7 +133,7 @@ class ConfigGenerator:
                 'serviceName': vars['vless_grpc_service']
             }
         else:
-            raise ValueError(f"Неподдерживаемый транспорт: {transport}")
+            raise ValueError(f"Unsupported transport: {transport}")
         
         param_string = '&'.join([f"{k}={v}" for k, v in params.items()])
         
@@ -142,7 +142,7 @@ class ConfigGenerator:
         return vless_url
     
     def generate_vmess_url(self, transport: str = 'ws') -> str:
-        """Генерация VMess URL для мобильных приложений"""
+        """Generate VMess URL for mobile applications"""
         vars = self.get_env_vars()
         
         if transport == 'ws':
@@ -178,7 +178,7 @@ class ConfigGenerator:
                 'sni': vars['domain']
             }
         else:
-            raise ValueError(f"Неподдерживаемый транспорт: {transport}")
+            raise ValueError(f"Unsupported transport: {transport}")
         
         import json
         import base64
@@ -189,7 +189,7 @@ class ConfigGenerator:
         return f"vmess://{vmess_b64}"
     
     def generate_trojan_url(self, transport: str = 'ws') -> str:
-        """Генерация Trojan URL для мобильных приложений"""
+        """Generate Trojan URL for mobile applications"""
         vars = self.get_env_vars()
         
         if transport == 'ws':
@@ -208,7 +208,7 @@ class ConfigGenerator:
                 'serviceName': vars['trojan_grpc_service']
             }
         else:
-            raise ValueError(f"Неподдерживаемый транспорт: {transport}")
+            raise ValueError(f"Unsupported transport: {transport}")
         
         param_string = '&'.join([f"{k}={v}" for k, v in params.items()])
         
@@ -217,28 +217,28 @@ class ConfigGenerator:
         return trojan_url
     
     def generate_demo_site_config(self) -> str:
-        """Генерация конфигурации демо сайта"""
+        """Generate demo site configuration"""
         vars = self.get_env_vars()
         template = self.env.get_template('demo_site.conf.j2')
         return template.render(**vars)
     
     def generate_nginx_domain_config(self) -> str:
-        """Генерация конфигурации домена для nginx-proxy с секретной страницей"""
+        """Generate domain configuration for nginx-proxy with secret page"""
         vars = self.get_env_vars()
         template = self.env.get_template('nginx_domain.conf.j2')
         return template.render(**vars)
     
     def generate_nginx_custom_config(self) -> str:
-        """Генерация кастомной конфигурации для nginx-proxy"""
+        """Generate custom configuration for nginx-proxy"""
         vars = self.get_env_vars()
         template = self.env.get_template('nginx_custom.conf.j2')
         return template.render(**vars)
     
     def generate_config_page(self) -> str:
-        """Генерация HTML страницы для скачивания конфигураций"""
+        """Generate HTML page for downloading configurations"""
         vars = self.get_env_vars()
         
-        # Генерируем VMess Base64 для URL
+        # Generate VMess Base64 for URL
         import json
         import base64
         
@@ -266,40 +266,40 @@ class ConfigGenerator:
         return template.render(**vars)
     
     def generate_config_files(self) -> None:
-        """Генерация файлов конфигураций для веб-страницы"""
-        # В контейнере всегда используем /app, локально - текущую директорию
+        """Generate configuration files for the web page"""
+        # In container always use /app, locally - current directory
         if Path('/app/workspace').exists():
             base_path = Path('/app')
         else:
             base_path = Path('.')
             
-        # Создаем отдельную директорию для конфигураций вне www
+        # Create a separate directory for configurations outside www
         configs_dir = base_path / 'data' / 'secret-configs'
         configs_dir.mkdir(parents=True, exist_ok=True)
         
-        # Генерация страницы конфигураций
-        print("🔧 Генерация страницы конфигураций...")
+        # Generate configuration page
+        print("Generating configuration page...")
         config_page_content = self.generate_config_page()
         with open(configs_dir / 'index.html', 'w', encoding='utf-8') as f:
             f.write(config_page_content)
         
-        # Копируем клиентские конфигурации в папку configs
+        # Copy client configurations to the configs folder
         client_dir = base_path / 'config' / 'client'
         if client_dir.exists():
-            print("🔧 Копирование клиентских конфигураций...")
+            print("Copying client configurations...")
             for config_file in client_dir.glob('*.json'):
-                # Копируем файл в configs директорию
+                # Copy file to configs directory
                 with open(config_file, 'r', encoding='utf-8') as src:
                     with open(configs_dir / config_file.name, 'w', encoding='utf-8') as dst:
                         dst.write(src.read())
         
-        print(f"✅ Секретная страница создана в: {configs_dir}")
+        print(f"Secret page created in: {configs_dir}")
     
     def generate_website_files(self) -> None:
-        """Генерация файлов веб-сайта"""
+        """Generate website files"""
         vars = self.get_env_vars()
         
-        # В контейнере всегда используем /app, локально - текущую директорию
+        # In container always use /app, locally - current directory
         if Path('/app/workspace').exists():
             base_path = Path('/app')
         else:
@@ -308,14 +308,14 @@ class ConfigGenerator:
         www_dir = base_path / 'data' / 'www'
         www_dir.mkdir(parents=True, exist_ok=True)
         
-        # Генерация index.html
+        # Generate index.html
         template = self.env.get_template('index.html.j2')
         index_content = template.render(**vars)
         
         with open(www_dir / 'index.html', 'w', encoding='utf-8') as f:
             f.write(index_content)
         
-        # Генерация robots.txt
+        # Generate robots.txt
         template = self.env.get_template('robots.txt.j2')
         robots_content = template.render(**vars)
         
@@ -323,9 +323,9 @@ class ConfigGenerator:
             f.write(robots_content)
     
     def generate_all_configs(self) -> None:
-        """Генерация всех конфигураций для nginx-proxy архитектуры"""
+        """Generate all configurations for nginx-proxy architecture"""
         
-        # В контейнере всегда используем /app, локально - текущую директорию  
+        # In container always use /app, locally - current directory  
         if Path('/app/workspace').exists():
             base_path = Path('/app')
         else:
@@ -343,58 +343,58 @@ class ConfigGenerator:
         client_dir = config_dir / 'client'
         client_dir.mkdir(exist_ok=True)
         
-        print(f"📁 Создание конфигураций в: {config_dir}")
+        print(f"Creating configurations in: {config_dir}")
         
-        # Получаем домен для создания правильного имени файла
+        # Get domain to create correct file name
         vars = self.get_env_vars()
         domain = vars['domain']
         
-        print(f"🔧 Генерация для домена: {domain}")
+        print(f"Generating for domain: {domain}")
         
-        # Генерация конфигурации Xray сервера
-        print("🔧 Генерация конфигурации Xray сервера...")
+        # Generate Xray server configuration
+        print("Generating Xray server configuration...")
         xray_config = self.generate_xray_server_config()
         with open(xray_dir / 'config.json', 'w', encoding='utf-8') as f:
             f.write(xray_config)
         
-        # Генерация кастомной конфигурации для nginx-proxy
-        print("🔧 Генерация кастомной конфигурации nginx-proxy...")
+        # Generate custom configuration for nginx-proxy
+        print("Generating custom nginx-proxy configuration...")
         nginx_custom_config = self.generate_nginx_custom_config()
         
-        # nginx-proxy ищет файлы в формате {domain}_location
+        # nginx-proxy looks for files in {domain}_location format
         location_file = nginx_dir / f'{domain}_location'
         with open(location_file, 'w', encoding='utf-8') as f:
             f.write(nginx_custom_config)
-        print(f"✅ Создан файл: {location_file}")
+        print(f"File created: {location_file}")
         
-        # Генерация конфигурации домена с секретной страницей
-        print("🔧 Генерация конфигурации домена с секретной страницей...")
+        # Generate domain configuration with secret page
+        print("Generating domain configuration with secret page...")
         nginx_domain_config = self.generate_nginx_domain_config()
         
-        # nginx-proxy ищет файлы в формате {domain} для конфигурации всего домена
+        # nginx-proxy looks for files in {domain} format for the entire domain configuration
         domain_file = nginx_dir / domain
         with open(domain_file, 'w', encoding='utf-8') as f:
             f.write(nginx_domain_config)
-        print(f"✅ Создан файл домена: {domain_file}")
+        print(f"Domain file created: {domain_file}")
         
-        # Генерация конфигурации демо сайта
-        print("🔧 Генерация конфигурации демо сайта...")
+        # Generate demo site configuration
+        print("Generating demo site configuration...")
         demo_site_config = self.generate_demo_site_config()
         with open(nginx_dir / 'demo-site.conf', 'w', encoding='utf-8') as f:
             f.write(demo_site_config)
         
-        # Генерация всех клиентских конфигураций
-        print("🔧 Генерация клиентских конфигураций...")
+        # Generate all client configurations
+        print("Generating client configurations...")
         client_configs = self.generate_all_client_configs()
         for config_name, config_content in client_configs.items():
             with open(client_dir / f'{config_name}.json', 'w', encoding='utf-8') as f:
                 f.write(config_content)
         
-        # Генерация файлов веб-сайта
-        print("🔧 Генерация файлов веб-сайта...")
+        # Generate website files
+        print("Generating website files...")
         self.generate_website_files()
         
-        # Генерация файлов конфигураций для веб-страницы
+        # Generate configuration files for the web page
         self.generate_config_files()
         
-        print("✅ Все конфигурации для nginx-proxy архитектуры сгенерированы!") 
+        print("All configurations for nginx-proxy architecture generated!")

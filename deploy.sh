@@ -2,13 +2,13 @@
 
 set -e
 
-echo "🚀 Автоматическое развертывание Xray VPN Server"
+echo "Automatic Xray VPN Server Deployment"
 echo "================================================"
 
-# Проверка аргументов
+# Check arguments
 if [ $# -lt 1 ]; then
-    echo "❌ Использование: $0 <домен> [email] [server-ip]"
-    echo "Пример: $0 vpn.example.com admin@example.com 203.0.113.10"
+    echo "Usage: $0 <domain> [email] [server-ip]"
+    echo "Example: $0 vpn.example.com admin@example.com 203.0.113.10"
     exit 1
 fi
 
@@ -16,61 +16,61 @@ DOMAIN=$1
 EMAIL=${2:-"admin@$DOMAIN"}
 SERVER_IP=${3:-$(curl -s ifconfig.me || curl -s ipinfo.io/ip || echo "127.0.0.1")}
 
-echo "📋 Параметры развертывания:"
-echo "   Домен: $DOMAIN"
+echo "Deployment parameters:"
+echo "   Domain: $DOMAIN"
 echo "   Email: $EMAIL"
-echo "   IP сервера: $SERVER_IP"
+echo "   Server IP: $SERVER_IP"
 echo
 
-# Создание директорий
-echo "📁 Создание директорий..."
+# Create directories
+echo "Creating directories..."
 mkdir -p config/{xray,nginx,client} data/{www,ssl,xray/logs}
 
-# Пересборка образа config-generator для применения исправлений
-echo "🔨 Пересборка образа config-generator..."
+# Rebuild config-generator image to apply fixes
+echo "Rebuilding config-generator image..."
 docker-compose build config-generator
 
-# Генерация конфигураций
-echo "⚙️  Генерация конфигураций..."
+# Generate configurations
+echo "Generating configurations..."
 docker-compose --profile tools run --rm config-generator init --domain "$DOMAIN" --email "$EMAIL" --server-ip "$SERVER_IP"
 
-# Проверка что правильный файл создан
+# Check if the correct file is created
 if [ -f "config/nginx/${DOMAIN}_location" ]; then
-    echo "✅ Кастомная конфигурация создана: ${DOMAIN}_location"
+    echo "Custom configuration created: ${DOMAIN}_location"
 else
-    echo "⚠️  Кастомная конфигурация не найдена, проверьте логи"
+    echo "Custom configuration not found, check logs"
 fi
 
-# Запуск сервисов
-echo "🐳 Запуск сервисов..."
+# Start services
+echo "Starting services..."
 docker-compose up -d --remove-orphans
 
-# Проверка статуса
-echo "✅ Проверка статуса сервисов..."
+# Check status
+echo "Checking service status..."
 sleep 5
 docker-compose ps
 
 echo
-echo "🎉 Базовое развертывание завершено!"
+echo "Basic deployment complete!"
 echo
-echo "📋 Следующие шаги:"
-echo "1. Настройте DNS: $DOMAIN → IP вашего сервера"
-echo "2. SSL сертификаты получатся автоматически (подождите 2-5 минут)"
-echo "3. Проверьте сайт: curl -I https://$DOMAIN"
+echo "Next steps:"
+echo "1. Configure DNS: $DOMAIN → Your server's IP"
+echo "2. SSL certificates will be obtained automatically (wait 2-5 minutes)"
+echo "3. Check website: curl -I https://$DOMAIN"
 echo
 
-# Получаем секретный путь из .env файла
+# Get secret path from .env file
 SECRET_PATH=$(grep "SECRET_CONFIG_PATH=" .env | cut -d'=' -f2)
 if [ -n "$SECRET_PATH" ]; then
-    echo "🔐 Секретная страница конфигураций:"
+    echo "Secret configurations page:"
     echo "   https://$DOMAIN$SECRET_PATH"
-    echo "   ⚠️  Сохраните эту ссылку в безопасном месте!"
+    echo "   Save this link in a safe place!"
     echo
 fi
 
-echo "📊 Управление:"
-echo "   - Статус: docker-compose ps"
-echo "   - Логи: docker-compose logs nginx-proxy acme-companion"
-echo "   - Диагностика: ./scripts/diagnose-ssl.sh"
-echo "   - Тестирование: ./scripts/test_connections.sh"
-echo "   - Остановка: docker-compose down" 
+echo "Management:"
+echo "   - Status: docker-compose ps"
+echo "   - Logs: docker-compose logs nginx-proxy acme-companion"
+echo "   - Diagnostics: ./scripts/diagnose-ssl.sh"
+echo "   - Testing: ./scripts/test_connections.sh"
+echo "   - Stop: docker-compose down"

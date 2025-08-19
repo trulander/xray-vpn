@@ -1,120 +1,120 @@
 #!/bin/bash
 
-echo "🔍 Диагностика nginx-proxy и SSL сертификатов"
-echo "=============================================="
+echo "Diagnosing nginx-proxy and SSL certificates"
+echo "================================================"
 
-# Проверка переменных окружения
-echo "1. Проверка переменных окружения:"
+# Check environment variables
+echo "1. Checking environment variables:"
 if [ -f .env ]; then
-    echo "✅ .env файл существует"
+    echo ".env file exists"
     source .env
-    echo "   Домен: ${DOMAIN:-не задан}"
-    echo "   Email: ${EMAIL:-не задан}"
-    echo "   IP сервера: ${SERVER_IP:-не задан}"
+    echo "   Domain: ${DOMAIN:-not set}"
+    echo "   Email: ${EMAIL:-not set}"
+    echo "   Server IP: ${SERVER_IP:-not set}"
 else
-    echo "❌ .env файл не найден"
+    echo ".env file not found"
 fi
 echo
 
-# Проверка статуса контейнеров nginx-proxy архитектуры
-echo "2. Статус контейнеров:"
+# Check status of nginx-proxy architecture containers
+echo "2. Container status:"
 docker-compose ps
 echo
 
-# Проверка переменных окружения в контейнере demo-website
-echo "3. Переменные окружения demo-website:"
-docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)" || echo "❌ Контейнер demo-website не запущен"
+# Check demo-website container environment variables
+echo "3. demo-website environment variables:"
+docker-compose exec demo-website env | grep -E "(VIRTUAL_HOST|LETSENCRYPT)" || echo "demo-website container is not running"
 echo
 
-# Проверка сертификатов в новой структуре nginx-proxy
-echo "4. SSL сертификаты (nginx-proxy структура):"
+# Check certificates in the new nginx-proxy structure
+echo "4. SSL certificates (nginx-proxy structure):"
 if [ -d "data/ssl" ]; then
-    echo "✅ Папка data/ssl существует"
+    echo "data/ssl folder exists"
     if [ -n "${DOMAIN}" ]; then
-        # Проверяем структуру nginx-proxy
+        # Check nginx-proxy structure
         if [ -f "data/ssl/${DOMAIN}.crt" ] && [ -f "data/ssl/${DOMAIN}.key" ]; then
-            echo "✅ Сертификаты nginx-proxy для ${DOMAIN} найдены:"
+            echo "nginx-proxy certificates for ${DOMAIN} found:"
             ls -la "data/ssl/${DOMAIN}.*" 2>/dev/null
         elif [ -d "data/ssl/live/${DOMAIN}" ]; then
-            echo "✅ Сертификаты Let's Encrypt для ${DOMAIN} найдены:"
+            echo "Let's Encrypt certificates for ${DOMAIN} found:"
             ls -la "data/ssl/live/${DOMAIN}/" 2>/dev/null
         else
-            echo "❌ Сертификаты для домена ${DOMAIN} не найдены"
-            echo "   Содержимое data/ssl:"
-            ls -la data/ssl/ 2>/dev/null | head -10 || echo "   Папка пуста"
+            echo "Certificates for domain ${DOMAIN} not found"
+            echo "   Contents of data/ssl:"
+            ls -la data/ssl/ 2>/dev/null | head -10 || echo "   Folder is empty"
         fi
     else
-        echo "❌ Домен не задан в переменных окружения"
+        echo "Domain not set in environment variables"
     fi
 else
-    echo "❌ Папка data/ssl не существует"
+    echo "data/ssl folder does not exist"
 fi
 echo
 
-# Проверка кастомных конфигураций nginx-proxy
-echo "5. Кастомные конфигурации nginx-proxy:"
+# Check custom nginx-proxy configurations
+echo "5. Custom nginx-proxy configurations:"
 if [ -n "${DOMAIN}" ] && [ -f "config/nginx/${DOMAIN}_location" ]; then
-    echo "✅ Кастомная конфигурация ${DOMAIN}_location существует"
-    echo "   Размер: $(wc -l < config/nginx/${DOMAIN}_location) строк"
+    echo "Custom configuration ${DOMAIN}_location exists"
+    echo "   Size: $(wc -l < config/nginx/${DOMAIN}_location) lines"
 else
-    echo "❌ Кастомная конфигурация ${DOMAIN}_location не найдена"
-    echo "   Содержимое config/nginx/:"
-    ls -la config/nginx/ 2>/dev/null || echo "   Папка не существует"
+    echo "Custom configuration ${DOMAIN}_location not found"
+    echo "   Contents of config/nginx/:"
+    ls -la config/nginx/ 2>/dev/null || echo "   Folder does not exist"
 fi
 echo
 
-# Проверка логов nginx-proxy
-echo "6. Логи nginx-proxy (последние 10 строк):"
-docker-compose logs --tail=10 nginx-proxy 2>/dev/null || echo "❌ Контейнер nginx-proxy не запущен"
+# Check nginx-proxy logs
+echo "6. nginx-proxy logs (last 10 lines):"
+docker-compose logs --tail=10 nginx-proxy 2>/dev/null || echo "nginx-proxy container is not running"
 echo
 
-# Проверка логов acme-companion
-echo "7. Логи acme-companion (последние 10 строк):"
-docker-compose logs --tail=10 acme-companion 2>/dev/null || echo "❌ Контейнер acme-companion не запущен"
+# Check acme-companion logs
+echo "7. acme-companion logs (last 10 lines):"
+docker-compose logs --tail=10 acme-companion 2>/dev/null || echo "acme-companion container is not running"
 echo
 
-# Проверка сгенерированной конфигурации nginx-proxy
-echo "8. Сгенерированная конфигурация nginx-proxy:"
-docker-compose exec nginx-proxy cat /etc/nginx/conf.d/default.conf 2>/dev/null | head -20 || echo "❌ Не удалось получить конфигурацию"
+# Check generated nginx-proxy configuration
+echo "8. Generated nginx-proxy configuration:"
+docker-compose exec nginx-proxy cat /etc/nginx/conf.d/default.conf 2>/dev/null | head -20 || echo "Failed to get configuration"
 echo
 
-# Проверка доступности Xray сервера
-echo "9. Проверка доступности Xray сервера:"
-docker-compose exec nginx-proxy nc -z xray-server 10001 && echo "✅ VMess WS порт 10001 доступен" || echo "❌ VMess WS порт 10001 недоступен"
-docker-compose exec nginx-proxy nc -z xray-server 10002 && echo "✅ VLESS WS порт 10002 доступен" || echo "❌ VLESS WS порт 10002 недоступен"
-docker-compose exec nginx-proxy nc -z xray-server 10003 && echo "✅ Trojan WS порт 10003 доступен" || echo "❌ Trojan WS порт 10003 недоступен"
-docker-compose exec nginx-proxy nc -z xray-server 10011 && echo "✅ VMess gRPC порт 10011 доступен" || echo "❌ VMess gRPC порт 10011 недоступен"
-docker-compose exec nginx-proxy nc -z xray-server 10012 && echo "✅ VLESS gRPC порт 10012 доступен" || echo "❌ VLESS gRPC порт 10012 недоступен"
-docker-compose exec nginx-proxy nc -z xray-server 10013 && echo "✅ Trojan gRPC порт 10013 доступен" || echo "❌ Trojan gRPC порт 10013 недоступен"
+# Check Xray server availability
+echo "9. Checking Xray server availability:"
+docker-compose exec nginx-proxy nc -z xray-server 10001 && echo "VMess WS port 10001 available" || echo "VMess WS port 10001 unavailable"
+docker-compose exec nginx-proxy nc -z xray-server 10002 && echo "VLESS WS port 10002 available" || echo "VLESS WS port 10002 unavailable"
+docker-compose exec nginx-proxy nc -z xray-server 10003 && echo "Trojan WS port 10003 available" || echo "Trojan WS port 10003 unavailable"
+docker-compose exec nginx-proxy nc -z xray-server 10011 && echo "VMess gRPC port 10011 available" || echo "VMess gRPC port 10011 unavailable"
+docker-compose exec nginx-proxy nc -z xray-server 10012 && echo "VLESS gRPC port 10012 available" || echo "VLESS gRPC port 10012 unavailable"
+docker-compose exec nginx-proxy nc -z xray-server 10013 && echo "Trojan gRPC port 10013 available" || echo "Trojan gRPC port 10013 unavailable"
 echo
 
-# Проверка demo-website
-echo "10. Проверка demo-website:"
-docker-compose exec nginx-proxy nc -z demo-website 80 && echo "✅ Demo website доступен" || echo "❌ Demo website недоступен"
+# Check demo-website
+echo "10. Checking demo-website:"
+docker-compose exec nginx-proxy nc -z demo-website 80 && echo "Demo website available" || echo "Demo website unavailable"
 echo
 
-# Проверка HTTP/HTTPS
-echo "11. Проверка HTTP/HTTPS:"
-echo "HTTP (должен быть редирект на HTTPS):"
-curl -s -I http://localhost 2>/dev/null | head -3 || echo "❌ HTTP недоступен"
+# Check HTTP/HTTPS
+echo "11. Checking HTTP/HTTPS:"
+echo "HTTP (should redirect to HTTPS):"
+curl -s -I http://localhost 2>/dev/null | head -3 || echo "HTTP unavailable"
 echo
 
 echo "HTTPS:"
-curl -s -I -k https://localhost 2>/dev/null | head -3 || echo "❌ HTTPS недоступен"
+curl -s -I -k https://localhost 2>/dev/null | head -3 || echo "HTTPS unavailable"
 echo
 
-# Проверка DNS (если домен задан)
+# Check DNS (if domain is set)
 if [ -n "${DOMAIN}" ] && [ "${DOMAIN}" != "example.com" ]; then
-    echo "12. Проверка DNS:"
-    echo "Резолвинг домена ${DOMAIN}:"
-    nslookup "${DOMAIN}" 2>/dev/null | grep -A 1 "Name:" || dig +short "${DOMAIN}" 2>/dev/null || echo "❌ Не удалось разрезолвить домен"
+    echo "12. Checking DNS:"
+    echo "Resolving domain ${DOMAIN}:"
+    nslookup "${DOMAIN}" 2>/dev/null | grep -A 1 "Name:" || dig +short "${DOMAIN}" 2>/dev/null || echo "Failed to resolve domain"
     echo
 fi
 
-echo "🎯 Рекомендации для nginx-proxy архитектуры:"
-echo "1. Убедитесь, что DNS настроен: ${DOMAIN} → IP сервера"
-echo "2. Проверьте логи: docker-compose logs nginx-proxy acme-companion"
-echo "3. Переменные окружения: VIRTUAL_HOST, LETSENCRYPT_HOST, LETSENCRYPT_EMAIL"
-echo "4. SSL сертификаты получаются автоматически (подождите до 5 минут)"
-echo "5. Для перезапуска: docker-compose restart"
-echo "6. Кастомные location блоки: config/nginx/\${DOMAIN}_location" 
+echo "Recommendations for nginx-proxy architecture:"
+echo "1. Ensure DNS is configured: ${DOMAIN} → Server IP"
+echo "2. Check logs: docker-compose logs nginx-proxy acme-companion"
+echo "3. Environment variables: VIRTUAL_HOST, LETSENCRYPT_HOST, LETSENCRYPT_EMAIL"
+echo "4. SSL certificates are obtained automatically (wait up to 5 minutes)"
+echo "5. To restart: docker-compose restart"
+echo "6. Custom location blocks: config/nginx/${DOMAIN}_location"

@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Основные страницы
+# Main pages
 Allow: /index.html
 Allow: /*.css
 Allow: /*.js
@@ -12,7 +12,7 @@ Allow: /*.gif
 Allow: /*.ico
 Allow: /*.svg
 
-# Запрещаем индексацию служебных файлов
+# Disallow indexing of service files
 Disallow: /.well-known/
 Disallow: /config/
 Disallow: /logs/
@@ -20,5 +20,5 @@ Disallow: /logs/
 # Sitemap
 Sitemap: https://{{ domain }}/sitemap.xml
 
-# Crawl-delay для ботов
-Crawl-delay: 1 
+# Crawl-delay for bots
+Crawl-delay: 1

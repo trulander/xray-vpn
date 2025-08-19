@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Nginx Proxy с автоматическим SSL
+  # Nginx Proxy with automatic SSL
   nginx-proxy:
     image: nginxproxy/nginx-proxy:latest
     container_name: xray-nginx-proxy
@@ -21,7 +21,7 @@ services:
     networks:
       - xray-network
 
-  # Acme Companion для автоматических SSL сертификатов
+  # Acme Companion for automatic SSL certificates
   acme-companion:
     image: nginxproxy/acme-companion:latest
     container_name: xray-acme-companion
@@ -39,7 +39,7 @@ services:
     depends_on:
       - nginx-proxy
 
-  # Демо веб-сайт (fallback для обычного трафика)
+  # Demo website (fallback for regular traffic)
   demo-website:
     image: nginx:alpine
     container_name: xray-demo-website
@@ -54,7 +54,7 @@ services:
     networks:
       - xray-network
 
-  # Xray VPN сервер с множественными протоколами
+  # Xray VPN server with multiple protocols
   xray-server:
     image: teddysun/xray:latest
     container_name: xray-server
@@ -65,7 +65,7 @@ services:
     networks:
       - xray-network
 
-  # Генератор конфигураций
+  # Configuration generator
   config-generator:
     build:
       context: .
@@ -111,4 +111,4 @@ networks:
 volumes:
   nginx-logs:
   certbot-logs:
-  xray-logs: 
+  xray-logs:

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Конфигурации VPN - {{ domain }}</title>
+    <title>VPN Configurations - {{ domain }}</title>
     <style>
         * {
             margin: 0;
@@ -238,34 +238,34 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 VPN Конфигурации</h1>
-            <p>Скачайте конфигурации для подключения к {{ domain }}</p>
+            <h1>VPN Configurations</h1>
+            <p>Download configurations to connect to {{ domain }}</p>
         </div>
         
         <div class="content">
             <div class="warning">
-                <h3>⚠️ Безопасность</h3>
-                <p><strong>Не делитесь этой ссылкой!</strong> Эта страница содержит персональные конфигурации для доступа к VPN серверу. Сохраните ссылку в безопасном месте.</p>
+                <h3>Security</h3>
+                <p><strong>Do not share this link!</strong> This page contains personal configurations for accessing the VPN server. Save the link in a safe place.</p>
             </div>
             
             <div class="config-section">
-                <h2>📱 Конфигурационные файлы</h2>
+                <h2>Configuration Files</h2>
                 
                 <div class="protocol-group">
                     <h3>
                         VMess
-                        <span class="protocol-badge">Рекомендуется</span>
+                        <span class="protocol-badge">Recommended</span>
                     </h3>
                     <div class="config-grid">
                         <div class="config-item">
                             <h4>WebSocket</h4>
-                            <p>Лучшая совместимость с мобильными приложениями</p>
-                            <a href="vmess_ws.json" class="download-btn" download>Скачать JSON</a>
+                            <p>Best compatibility with mobile applications</p>
+                            <a href="vmess_ws.json" class="download-btn" download>Download JSON</a>
                         </div>
                         <div class="config-item">
                             <h4>gRPC</h4>
-                            <p>Оптимизирован для стабильности</p>
-                            <a href="vmess_grpc.json" class="download-btn" download>Скачать JSON</a>
+                            <p>Optimized for stability</p>
+                            <a href="vmess_grpc.json" class="download-btn" download>Download JSON</a>
                         </div>
                     </div>
                 </div>
@@ -273,18 +273,18 @@
                 <div class="protocol-group">
                     <h3>
                         VLESS
-                        <span class="protocol-badge">Быстрый</span>
+                        <span class="protocol-badge">Fast</span>
                     </h3>
                     <div class="config-grid">
                         <div class="config-item">
                             <h4>WebSocket</h4>
-                            <p>Минимальные накладные расходы</p>
-                            <a href="vless_ws.json" class="download-btn" download>Скачать JSON</a>
+                            <p>Minimal overhead</p>
+                            <a href="vless_ws.json" class="download-btn" download>Download JSON</a>
                         </div>
                         <div class="config-item">
                             <h4>gRPC</h4>
-                            <p>Современный протокол передачи</p>
-                            <a href="vless_grpc.json" class="download-btn" download>Скачать JSON</a>
+                            <p>Modern transmission protocol</p>
+                            <a href="vless_grpc.json" class="download-btn" download>Download JSON</a>
                         </div>
                     </div>
                 </div>
@@ -292,54 +292,54 @@
                 <div class="protocol-group">
                     <h3>
                         Trojan
-                        <span class="protocol-badge">Скрытность</span>
+                        <span class="protocol-badge">Stealth</span>
                     </h3>
                     <div class="config-grid">
                         <div class="config-item">
                             <h4>WebSocket</h4>
-                            <p>Имитирует HTTPS трафик</p>
-                            <a href="trojan_ws.json" class="download-btn" download>Скачать JSON</a>
+                            <p>Mimics HTTPS traffic</p>
+                            <a href="trojan_ws.json" class="download-btn" download>Download JSON</a>
                         </div>
                         <div class="config-item">
                             <h4>gRPC</h4>
-                            <p>Высокая производительность</p>
-                            <a href="trojan_grpc.json" class="download-btn" download>Скачать JSON</a>
+                            <p>High performance</p>
+                            <a href="trojan_grpc.json" class="download-btn" download>Download JSON</a>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="url-section">
-                <h3>📲 URL для мобильных приложений</h3>
-                <p>Скопируйте и вставьте в приложение:</p>
+                <h3>URLs for mobile applications</h3>
+                <p>Copy and paste into the application:</p>
                 
                 <div class="url-item">
-                    <div class="url-label">VLESS WebSocket (Рекомендуется)</div>
+                    <div class="url-label">VLESS WebSocket (Recommended)</div>
                     <div class="url-value" id="vless-ws-url">vless://{{ vless_uuid }}@{{ domain }}:443?encryption=none&security=tls&sni={{ domain }}&type=ws&host={{ domain }}&path={{ vless_ws_path | urlencode }}#Xray-VLESS-WS</div>
-                    <button class="copy-btn" onclick="copyToClipboard('vless-ws-url')">Копировать</button>
+                    <button class="copy-btn" onclick="copyToClipboard('vless-ws-url')">Copy</button>
                 </div>
                 
                 <div class="url-item">
                     <div class="url-label">VMess WebSocket</div>
                     <div class="url-value" id="vmess-ws-url">vmess://{{ vmess_b64_config }}</div>
-                    <button class="copy-btn" onclick="copyToClipboard('vmess-ws-url')">Копировать</button>
+                    <button class="copy-btn" onclick="copyToClipboard('vmess-ws-url')">Copy</button>
                 </div>
                 
                 <div class="url-item">
                     <div class="url-label">Trojan WebSocket</div>
                     <div class="url-value" id="trojan-ws-url">trojan://{{ trojan_password }}@{{ domain }}:443?security=tls&sni={{ domain }}&type=ws&host={{ domain }}&path={{ trojan_ws_path | urlencode }}#Xray-Trojan-WS</div>
-                    <button class="copy-btn" onclick="copyToClipboard('trojan-ws-url')">Копировать</button>
+                    <button class="copy-btn" onclick="copyToClipboard('trojan-ws-url')">Copy</button>
                 </div>
             </div>
             
             <div class="instructions">
-                <h3>📋 Инструкции по использованию</h3>
+                <h3>Usage Instructions</h3>
                 <ol>
-                    <li><strong>Android:</strong> Установите V2rayNG, нажмите ➕ → Import config from file → выберите скачанный JSON файл</li>
-                    <li><strong>iOS:</strong> Установите Shadowrocket, скопируйте URL и вставьте в приложение</li>
-                    <li><strong>Windows:</strong> Установите V2rayN, импортируйте JSON конфигурацию через меню Servers</li>
-                    <li><strong>macOS:</strong> Установите V2rayU, импортируйте конфигурацию через Add Server</li>
-                    <li><strong>Linux:</strong> Установите Qv2ray, импортируйте JSON файл через Import Connection</li>
+                    <li><strong>Android:</strong> Install V2rayNG, tap ➕ → Import config from file → select the downloaded JSON file</li>
+                    <li><strong>iOS:</strong> Install Shadowrocket, copy the URL and paste into the app</li>
+                    <li><strong>Windows:</strong> Install V2rayN, import JSON configuration via the Servers menu</li>
+                    <li><strong>macOS:</strong> Install V2rayU, import configuration via Add Server</li>
+                    <li><strong>Linux:</strong> Install Qv2ray, import JSON file via Import Connection</li>
                 </ol>
             </div>
         </div>
@@ -351,10 +351,10 @@
             const text = element.textContent;
             
             navigator.clipboard.writeText(text).then(function() {
-                // Временно изменяем текст кнопки
+                // Temporarily change button text
                 const button = element.parentElement.querySelector('.copy-btn');
                 const originalText = button.textContent;
-                button.textContent = 'Скопировано!';
+                button.textContent = 'Copied!';
                 button.style.background = '#28a745';
                 
                 setTimeout(function() {
@@ -362,12 +362,12 @@
                     button.style.background = '#28a745';
                 }, 2000);
             }).catch(function(err) {
-                console.error('Ошибка копирования: ', err);
-                alert('Не удалось скопировать. Скопируйте вручную.');
+                console.error('Copy error: ', err);
+                alert('Failed to copy. Please copy manually.');
             });
         }
         
-        // Добавляем анимацию появления
+        // Add fade-in animation
         document.addEventListener('DOMContentLoaded', function() {
             const items = document.querySelectorAll('.config-item, .url-item');
             items.forEach((item, index) => {
@@ -383,4 +383,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

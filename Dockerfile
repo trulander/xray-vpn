@@ -2,13 +2,13 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Установка системных зависимостей
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка Python зависимостей
+# Install Python dependencies
 RUN pip install --no-cache-dir \
     docker>=7.0.0 \
     pyyaml>=6.0.1 \
@@ -17,9 +17,9 @@ RUN pip install --no-cache-dir \
     click>=8.1.0 \
     python-dotenv>=1.0.0
 
-# Создание пользователя для безопасности
+# Create user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Точка входа - файлы будут доступны через volume в /app/workspace
-ENTRYPOINT ["python", "-m", "src.main"] 
+# Entrypoint - files will be available via volume in /app/workspace
+ENTRYPOINT ["python", "-m", "src.main"]
